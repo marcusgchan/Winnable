@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { Schema, model } = mongoose;
 
 // Lobby schema
 const LobbySchema = new mongoose.Schema({
