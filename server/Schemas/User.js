@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
   password: String,
   gamesPlayed: Number,
   gamesWon: Number,
+  dateCreated: Date,
 });
 
 const User = mongoose.model('User', UserSchema);

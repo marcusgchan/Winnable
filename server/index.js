@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express();
 
 let { Lobby } = require('./Schemas/Lobby');
+let { User } = require('./Schemas/User');
 
 app.use(cors());
 app.use(express.json());
@@ -17,7 +18,7 @@ app.listen(PORT, () => {
 // Example connection
 mongoose
   .connect(
-    `mongodb+srv://kyletseng1699:kiNkRYZ426AWSVNc@cluster0.ddzi4ur.mongodb.net/WinnableDB?retryWrites=true&w=majority&appName=Cluster0`
+    `mongodb+srv://dev:mCVBv2BQAmw9ONvk@cluster0.ddzi4ur.mongodb.net/WinnableDB?retryWrites=true&w=majority&appName=Cluster0`
   )
   .then(() => {
     console.log(`Successfully connected to MongoDB`);
@@ -34,6 +35,21 @@ mongoose
       } catch (err) {
         console.error('Error creating lobby: ', err);
         res.status(500).json({ err: 'Failed to create lobby.' });
+      }
+    });
+
+    // Test POST
+    app.post('/api/user', async (req, res) => {
+      try {
+        let newUser = new User(req.body);
+        newUser.dateCreated = Date.now();
+
+        const savedUser = await newUser.save();
+
+        res.json(savedUser);
+      } catch (err) {
+        console.error('Error creating user: ', err);
+        res.status(500).json({ err: 'Failed to create user.' });
       }
     });
   });
