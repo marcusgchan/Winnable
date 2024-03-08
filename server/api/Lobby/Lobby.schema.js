@@ -18,7 +18,15 @@ const LobbySchema = new mongoose.Schema({
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     score: Number,
   },
-  games: [{ id: String, description: String, selectedBy: String, winnerTeam: String }],
+  games: [
+    {
+      id: String,
+      imageUrl: String,
+      description: String,
+      selectedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      winnerTeam: String,
+    },
+  ],
 });
 
 const Lobby = mongoose.model('Lobby', LobbySchema);
