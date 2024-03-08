@@ -7,6 +7,7 @@ const LobbySchema = new mongoose.Schema({
   maxPlayers: Number,
   gameNumbers: Number, // number of games to compete in
   dateCreated: Date,
+  lastUpdated: Date,
   team1: {
     captain: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
@@ -17,7 +18,16 @@ const LobbySchema = new mongoose.Schema({
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     score: Number,
   },
-  games: [{ id: String, description: String, selectedBy: String, winnerTeam: String }],
+  games: [
+    {
+      id: String,
+      name: String,
+      imageUrl: String,
+      description: String,
+      selectedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      winnerTeam: String,
+    },
+  ],
 });
 
 const Lobby = mongoose.model('Lobby', LobbySchema);

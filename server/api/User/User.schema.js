@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
   gamesPlayed: Number,
   gamesWon: Number,
   dateCreated: Date,
+  lastUpdated: Date,
 });
 
 const User = mongoose.model('User', UserSchema);
