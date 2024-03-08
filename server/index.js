@@ -4,8 +4,8 @@ const cors = require('cors');
 
 const app = express();
 
-let { Lobby } = require('./Schemas/Lobby');
-let { User } = require('./Schemas/User');
+let { Lobby } = require('./schemas/Lobby');
+let { User } = require('./schemas/User');
 
 app.use(cors());
 app.use(express.json());
