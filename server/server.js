@@ -4,6 +4,7 @@ const cors = require('cors');
 
 // Routes import
 const { userRoutes } = require('./api/User/User.routes');
+const { lobbyRoutes } = require('./api/Lobby/Lobby.routes');
 
 const app = express();
 
@@ -21,6 +22,7 @@ mongoose
 
     // Routes
     app.use('/api/user', userRoutes);
+    app.use('/api/lobby', lobbyRoutes);
 
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
