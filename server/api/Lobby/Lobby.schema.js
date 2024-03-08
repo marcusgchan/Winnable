@@ -21,6 +21,7 @@ const LobbySchema = new mongoose.Schema({
   games: [
     {
       id: String,
+      name: String,
       imageUrl: String,
       description: String,
       selectedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
