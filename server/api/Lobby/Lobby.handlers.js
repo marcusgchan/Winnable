@@ -1,4 +1,5 @@
-const { Lobby } = require("./Lobby.schema");
+const { Lobby } = require('./Lobby.schema');
+const { retrieveAllLobbies } = require('./Lobby');
 
 // POST /api/lobby - Create a new lobby
 async function createLobby(req, res) {
@@ -11,19 +12,19 @@ async function createLobby(req, res) {
 
     res.json(savedLobby);
   } catch (err) {
-    console.error("Error creating lobby: ", err);
-    res.status(500).json({ err: "Failed to create lobby." });
+    console.error('Error creating lobby: ', err);
+    res.status(500).json({ err: 'Failed to create lobby.' });
   }
 }
 
 // GET /api/lobby - Get all lobbies
 async function getAllLobbies(req, res) {
   try {
-    const lobbies = await Lobby.find();
+    const lobbies = await retrieveAllLobbies();
     res.json(lobbies);
   } catch (err) {
-    console.error("Error finding lobbies: ", err);
-    res.status(500).json({ err: "Failed to get lobbies" });
+    console.error('Error finding lobbies: ', err);
+    res.status(500).json({ err: 'Failed to get lobbies' });
   }
 }
 
@@ -33,8 +34,8 @@ async function getLobby(req, res) {
     const lobby = await Lobby.findById(req.params.id);
     res.json(lobby);
   } catch (err) {
-    console.error("Error finding lobby: ", err);
-    res.status(500).json({ err: "Failed to get lobby" });
+    console.error('Error finding lobby: ', err);
+    res.status(500).json({ err: 'Failed to get lobby' });
   }
 }
 
@@ -44,12 +45,12 @@ async function updateLobby(req, res) {
     const updatedLobby = await Lobby.findByIdAndUpdate(
       req.params.id,
       { ...req.body, lastUpdated: Date.now() },
-      { new: true },
+      { new: true }
     );
     res.json(updatedLobby);
   } catch (err) {
-    console.error("Error updateing lobby: ", err);
-    res.status(500).json({ err: "Failed to update lobby" });
+    console.error('Error updateing lobby: ', err);
+    res.status(500).json({ err: 'Failed to update lobby' });
   }
 }
 
@@ -59,8 +60,8 @@ async function deleteLobby(req, res) {
     const deletedLobby = await Lobby.findByIdAndDelete(req.params.id);
     res.json(deletedLobby);
   } catch (err) {
-    console.error("Error deleting a lobby: ", err);
-    res.status(500).json({ err: "Failed to delete a lobby" });
+    console.error('Error deleting a lobby: ', err);
+    res.status(500).json({ err: 'Failed to delete a lobby' });
   }
 }
 
