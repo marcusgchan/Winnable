@@ -2,6 +2,9 @@ const WebSocket = require('ws');
 const { retrieveAllLobbies } = require('../api/Lobby/Lobby');
 
 const clients = [];
+// [ { userId: "", ws: {} } ]
+
+// { lobby1: [ { user1: "", ws: {} } ] , lobby2: { user3: ws } }
 
 function startWebSocketServer(port) {
   const wss = new WebSocket.Server({ port });

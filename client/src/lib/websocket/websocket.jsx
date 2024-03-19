@@ -7,6 +7,8 @@ const userId = uniqid();
 export function initializeWebSocket() {
   ws = new WebSocket("ws://localhost:8081");
 
+  // send a message back to server once the connection has been opened
+  // used to bind a userID with this websocket client
   ws.onopen = () => {
     console.log("WebSocket connection established.");
     ws.send(
