@@ -16,10 +16,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
+  name: 'session',
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: true },
+  cookie: { maxAge: 60000*60*24 },
 }))
 
 mongoose

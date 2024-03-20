@@ -2,7 +2,7 @@ const axios = require('axios');
 require('dotenv').config()
 const userHandlers = require('../api/User/User.handlers')
 
-// Redirect to Discord OAuth2
+// Redirect to Discord OAuth2 /api/auth/login
 async function login(req, res) {
   res.redirect(process.env.REDIRECT_URI)
 }
@@ -43,6 +43,7 @@ async function callback(req, res) {
     }
 
     req.session.user = userLogin.discord_id;
+    console.log(req.session.cookie)
 
     res.send('Logged in! ' + JSON.stringify(user.data));
   } catch (error) {
