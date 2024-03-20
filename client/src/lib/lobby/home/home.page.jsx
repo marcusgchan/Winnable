@@ -37,7 +37,6 @@ export function HomePage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log(import.meta.env.VITE_SERVER_URL);
     async function fetchLobbies() {
       try {
         const response = await fetch(
