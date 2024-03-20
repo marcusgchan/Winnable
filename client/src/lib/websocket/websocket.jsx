@@ -1,8 +1,6 @@
-import uniqid from "uniqid";
-
 let ws;
-// should be userId from db, uniqid() is just a temporary test method
-const userId = uniqid();
+// TODO: should be userId of the current logged in user
+const userId = "65e53a1b6258c473f5e22d25";
 
 export function initializeWebSocket() {
   ws = new WebSocket("ws://localhost:8081");
@@ -20,6 +18,7 @@ export function initializeWebSocket() {
     );
   };
 
+  // This is where client would receive msg from the websocket server
   ws.onmessage = (event) => {
     console.log("Message from server", event);
   };
@@ -33,20 +32,14 @@ export function initializeWebSocket() {
   };
 }
 
-export function sendMessage(data) {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ userId, data, event: "simpleMessage" }));
-  } else {
-    console.error("WebSocket connection not open.");
-  }
-}
-
+// Call this function when client leaves the lobby
 export function closeWebSocket() {
   if (ws) {
     ws.close();
   }
 }
 
+// used to send the current lobby state to the websocket connection
 // takes in a lobby object
 export function updateLobby(lobbyObj) {
   if (ws && ws.readyState === WebSocket.OPEN) {

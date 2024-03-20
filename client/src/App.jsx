@@ -11,6 +11,7 @@ import {
   closeWebSocket,
   updateLobby,
 } from "./lib/websocket/websocket";
+import uniqid from "uniqid";
 
 const router = createBrowserRouter([
   {
@@ -68,7 +69,11 @@ function Header() {
       <Button onClick={() => sendMessage("this is a test")}>
         Send message
       </Button>
-      <Button onClick={() => updateLobby({ name: "hello" })}>
+      <Button
+        onClick={() =>
+          updateLobby({ id: "65fa26c5e0f19bd948896b78", lobbyName: uniqid() })
+        }
+      >
         Update lobby
       </Button>
     </header>

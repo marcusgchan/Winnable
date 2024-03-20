@@ -1,10 +1,10 @@
 const WebSocket = require('ws');
-const { retrieveAllLobbies } = require('../api/Lobby/Lobby');
-
-const clients = [];
-// [ { userId: "", ws: {} } ]
+const { retrieveAllLobbies, retrieveLobbyById, updateLobbyById } = require('../api/Lobby/Lobby');
 
 // { lobby1: [ { user1: "", ws: {} } ] , lobby2: { user3: ws } }
+// I think this way is better cuz either way we have to get updated lobby object from the db and we can just look at who's in the lobby
+// [ { userId: "", ws: {} } ]
+const clients = [];
 
 function startWebSocketServer(port) {
   const wss = new WebSocket.Server({ port });
@@ -41,7 +41,7 @@ function startWebSocketServer(port) {
     ws.on('message', (message) => {
       const { userId, data, event } = JSON.parse(message);
 
-      console.log(JSON.parse(message));
+      console.log('received from client', JSON.parse(message));
 
       // Check which event to trigger based on the client's message
       switch (event) {
@@ -66,14 +66,27 @@ function startWebSocketServer(port) {
   });
 }
 
-// broadcast lobby info to all the connected user
+// data is the lobby object
 async function updateLobby(ws, userId, data) {
   try {
     // 1. receive data on what to update in stringified JSON
+    console.log('lobby state obj', data);
     // 2. update lobby in db and get the updated lobby object
+    const updatedLobby = await updateLobbyById(data.id, data);
     // 3. find all users that are connected to that lobby and broadcast the update
-    const lobbies = await retrieveAllLobbies();
-    ws.send(JSON.stringify(lobbies));
+    const teamOneMembers = updatedLobby.teamOne.members;
+    const teamOneCaptain = updatedLobby.teamOne.captain;
+    const teamTwoMembers = updatedLobby.teamTwo.members;
+    const teamTwoCaptain = updatedLobby.teamTwo.captain;
+
+    const usersInLobby = [...teamOneCaptain, ...teamOneMembers, ...teamTwoCaptain, ...teamTwoMembers];
+    console.log('users in lobby', usersInLobby.toString());
+
+    clients.forEach((client) => {
+      if (client.ws.readyState === WebSocket.OPEN && usersInLobby.toString().includes(client.userId)) {
+        client.ws.send(JSON.stringify(updatedLobby));
+      }
+    });
   } catch (err) {
     console.error(err);
   }

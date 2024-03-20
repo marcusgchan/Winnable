@@ -1,5 +1,5 @@
 const { Lobby } = require('./Lobby.schema');
-const { retrieveAllLobbies } = require('./Lobby');
+const { retrieveAllLobbies, retrieveLobbyById, updateLobbyById } = require('./Lobby');
 
 // POST /api/lobby - Create a new lobby
 async function createLobby(req, res) {
@@ -31,7 +31,7 @@ async function getAllLobbies(req, res) {
 // GET /api/lobby/id - Get a lobby with given ID
 async function getLobby(req, res) {
   try {
-    const lobby = await Lobby.findById(req.params.id);
+    const lobby = await retrieveLobbyById(req.params.id);
     res.json(lobby);
   } catch (err) {
     console.error('Error finding lobby: ', err);
@@ -42,11 +42,7 @@ async function getLobby(req, res) {
 // PUT /api/lobby/id - Update a lobby with given ID
 async function updateLobby(req, res) {
   try {
-    const updatedLobby = await Lobby.findByIdAndUpdate(
-      req.params.id,
-      { ...req.body, lastUpdated: Date.now() },
-      { new: true }
-    );
+    const updatedLobby = await updateLobbyById(req.params.id, req.body);
     res.json(updatedLobby);
   } catch (err) {
     console.error('Error updateing lobby: ', err);
