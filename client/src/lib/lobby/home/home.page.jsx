@@ -72,7 +72,7 @@ function CreateLobbyModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Create Lobby</Button>
+        <Button>Create Lobby</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

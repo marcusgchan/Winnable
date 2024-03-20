@@ -1,19 +1,18 @@
+import { Button } from "@/lib/ui/button";
+import { Input } from "@/lib/ui/input";
+import { Textarea } from "@/lib/ui/textarea";
 import React from "react";
 export function DraftGamesPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-gray-900 p-4">
+    <div className="flex flex-col space-y-16 bg-card bg-gray-900 p-4">
       <div className="flex flex-1">
         {/* Sidebar for game search */}
-        <div className="w-1/4 p-2">
-          <input
-            type="text"
-            placeholder="Search Game"
-            className="mb-2 w-full rounded bg-gray-800 p-2"
-          />
-          <textarea
+        <div className="w-1/4 space-y-2 p-2">
+          <Input type="text" placeholder="Search Game" />
+          <Textarea
             placeholder="Description/Rules"
-            className="mb-2 h-52 w-full rounded bg-gray-800 p-2"
-          ></textarea>
+            className="h-52  bg-gray-800"
+          ></Textarea>
           <button className="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600">
             Confirm
           </button>
@@ -22,43 +21,43 @@ export function DraftGamesPage() {
         {/* Selected games and members list */}
         <div className="flex flex-1 flex-col p-2 md:flex-row">
           <div className="m-2 flex-1">
-            <h2 className="mb-2 rounded bg-gray-800 text-lg font-semibold">
+            <h2 className="mb-2 rounded bg-gray-800 p-2 text-lg font-semibold">
               Selected Games
             </h2>
-            <div className="mb-2 flex items-center justify-between rounded bg-gray-800">
+            <div className="mb-2 flex items-center justify-between rounded bg-gray-800 p-2">
               <h3>Games Team 1</h3>
               <span className="text-sm">3/10</span>
             </div>
             {/* Placeholder for selected games for Team 1 */}
             <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
               {/* Mockup of game slots */}
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-pink-300">
+              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team1">
                 Game 1
               </div>
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-pink-300">
+              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team1">
                 Game 2
               </div>
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-pink-300">
+              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team1">
                 Game 3
               </div>
 
               {/* More game slots */}
             </div>
 
-            <div className="mb-2 flex items-center justify-between rounded bg-gray-800">
+            <div className="mb-2 flex items-center justify-between rounded bg-gray-800 p-2">
               <h3>Games Team 2</h3>
               <span className="text-sm">3/10</span>
             </div>
             {/* Placeholder for selected games for Team 2 */}
             <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
               {/* Mockup of game slots */}
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-blue-300">
+              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team2">
                 Game 1
               </div>
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-blue-300">
+              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team2">
                 Game 2
               </div>
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-blue-300">
+              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team2">
                 Game 3
               </div>
               {/* More game slots */}
@@ -96,10 +95,8 @@ export function DraftGamesPage() {
       </div>
 
       {/* Start button */}
-      <div className="w-full p-80">
-        <button className="w-30 mx-auto block rounded bg-yellow-400 p-3 text-white hover:bg-yellow-500">
-          START
-        </button>
+      <div className="text-center">
+        <Button>START</Button>
       </div>
     </div>
   );

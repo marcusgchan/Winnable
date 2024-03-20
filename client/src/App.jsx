@@ -7,11 +7,11 @@ import { GamePage } from "./lib/lobby/game/game.page";
 import { Button } from "./lib/ui/button";
 import {
   initializeWebSocket,
-  sendMessage,
-  closeWebSocket,
+  // sendMessage,
+  // closeWebSocket,
   updateLobby,
 } from "./lib/websocket/websocket";
-import uniqid from "uniqid";
+// import uniqid from "uniqid";
 
 const router = createBrowserRouter([
   {
