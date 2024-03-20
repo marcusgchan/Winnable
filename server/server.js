@@ -19,7 +19,7 @@ mongoose.connect(process.env.MONGODB_CONNECTION_STRING).then(() => {
   console.log(`Successfully connected to MongoDB`);
 
   // start websocket server
-  // startWebSocketServer(process.env.WEBSOCKET_PORT);
+  startWebSocketServer(process.env.WEBSOCKET_PORT);
 
   // Routes
   app.use('/api/user', userRoutes);
