@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/lib/ui/card";
 //import { CreateLobbyModal } from './CreateLobbyModal';
 import {
@@ -31,30 +31,31 @@ const createLobbySchema = z.object({
   numGames: z.coerce.number().int().min(1).max(10),
 });
 
-
-
 export function HomePage() {
   const [lobbies, setLobbies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log(import.meta.env.VITE_SERVER_URL);
     async function fetchLobbies() {
       try {
-        const response = await fetch('/api/lobby'); 
+        const response = await fetch(
+          `${import.meta.env.VITE_SERVER_URL}/api/lobby`,
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        try{
-        const data = await response.json();
-        setLobbies(data);
-        } catch(jsonParseError){
+        try {
+          const data = await response.json();
+          setLobbies(data);
+        } catch (jsonParseError) {
           console.error("Error parsing JSON:", jsonParseError);
-          setError('Error parsing server response');
+          setError("Error parsing server response");
         }
       } catch (error) {
         console.error("Failed to fetch lobbies:", error);
-        setError('Failed to fetch. Check the console.');
+        setError("Failed to fetch. Check the console.");
       } finally {
         setIsLoading(false);
       }
@@ -78,17 +79,19 @@ export function HomePage() {
           <CardTitle>Lobby</CardTitle>
         </CardHeader>
         <CardContent>
-  <ul className="space-y-2">
-    {lobbies.map((lobby, index) => (
-      <li key={lobby._id} className="flex justify-between"> 
-        <span>{lobby.lobbyName}</span> 
-        
-        <span>{lobby.teamOne.members.length + lobby.teamTwo.members.length}/{lobby.maxPlayers}</span>
-      </li>
-    ))}
-  </ul>
-</CardContent>
+          <ul className="space-y-2">
+            {lobbies.map((lobby, index) => (
+              <li key={lobby._id} className="flex justify-between">
+                <span>{lobby.lobbyName}</span>
 
+                <span>
+                  {lobby.teamOne.members.length + lobby.teamTwo.members.length}/
+                  {lobby.maxPlayers}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
       </Card>
       <div className="text-center">
         <CreateLobbyModal />
@@ -96,7 +99,6 @@ export function HomePage() {
     </section>
   );
 }
-
 
 function CreateLobbyModal() {
   const form = useForm({
