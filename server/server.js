@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const startWebSocketServer = require('./webSocket/WebsocketServer');
+require('dotenv').config();
 
 // Routes import
 const { userRoutes } = require('./api/User/User.routes');
@@ -8,23 +10,22 @@ const { lobbyRoutes } = require('./api/Lobby/Lobby.routes');
 
 const app = express();
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
 
-mongoose
-  .connect(
-    `mongodb+srv://dev:mCVBv2BQAmw9ONvk@cluster0.ddzi4ur.mongodb.net/WinnableDB?retryWrites=true&w=majority&appName=Cluster0`
-  )
-  .then(() => {
-    console.log(`Successfully connected to MongoDB`);
+mongoose.connect(process.env.MONGODB_CONNECTION_STRING).then(() => {
+  console.log(`Successfully connected to MongoDB`);
 
-    // Routes
-    app.use('/api/user', userRoutes);
-    app.use('/api/lobby', lobbyRoutes);
+  // start websocket server
+  startWebSocketServer(process.env.WEBSOCKET_PORT);
 
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
+  // Routes
+  app.use('/api/user', userRoutes);
+  app.use('/api/lobby', lobbyRoutes);
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on port:`, PORT);
   });
+});
