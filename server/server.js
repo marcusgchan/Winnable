@@ -1,10 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const session = require('express-session')
 
 // Routes import
 const { userRoutes } = require('./api/User/User.routes');
 const { lobbyRoutes } = require('./api/Lobby/Lobby.routes');
+const { authRoutes } = require('./auth/routes');
 
 const app = express();
 
@@ -12,6 +14,13 @@ const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: true },
+}))
 
 mongoose
   .connect(
@@ -23,8 +32,11 @@ mongoose
     // Routes
     app.use('/api/user', userRoutes);
     app.use('/api/lobby', lobbyRoutes);
+    app.use('/api/auth', authRoutes)
 
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
+  }).catch((err) => {
+    console.log(`Error connecting to MongoDB: ${err}`);
   });
