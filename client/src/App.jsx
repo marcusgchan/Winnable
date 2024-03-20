@@ -65,7 +65,7 @@ function Header() {
     <header className="flex justify-between">
       <span>Winnable</span>
       <span>Login</span>
-      <Button onClick={() => initializeWebSocket()}>Connect Websocket</Button>
+      {/* <Button onClick={() => initializeWebSocket()}>Connect Websocket</Button>
       <Button onClick={() => sendMessage("this is a test")}>
         Send message
       </Button>
@@ -75,7 +75,7 @@ function Header() {
         }
       >
         Update lobby
-      </Button>
+      </Button> */}
     </header>
   );
 }
