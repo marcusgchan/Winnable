@@ -36,10 +36,10 @@
   }
 
   :root[class~="dark"] {
-    --background: 0 0% 3.9%;
+    --background: 214 42.1% 7.5%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 3.9%;
+    --card: 215 28% 17%;
     --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 3.9%;

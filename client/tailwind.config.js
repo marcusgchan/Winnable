@@ -1,3 +1,4 @@
+import colors from "tailwindcss/colors";
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
@@ -18,6 +19,8 @@ export default {
     },
     extend: {
       colors: {
+        team1: colors.pink["300"],
+        team2: colors.blue["300"],
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

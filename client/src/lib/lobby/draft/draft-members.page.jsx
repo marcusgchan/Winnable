@@ -41,7 +41,7 @@ export function DraftMembersPage() {
             />
           </CardContent>
           <CardFooter className="mt-auto self-center">
-            <Button>Join Team</Button>
+            <Button variant="team1">Join Team</Button>
           </CardFooter>
         </Card>
         <div className="flex flex-row items-center gap-2 [grid-area:btns] md:flex-col md:items-start">
@@ -56,7 +56,7 @@ export function DraftMembersPage() {
             <MemberList members={[{ name: "bob", id: "123" }]} />
           </CardContent>
           <CardFooter className="mt-auto self-center">
-            <Button>Join Team</Button>
+            <Button variant="team2">Join Team</Button>
           </CardFooter>
         </Card>
       </div>
