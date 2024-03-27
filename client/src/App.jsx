@@ -84,11 +84,16 @@ function Header() {
   const { user } = useLoaderData();
   const revalidator = useRevalidator();
   async function handleSignout() {
-    await fetch(`${SERVER_URL}/api/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
-    revalidator.revalidate();
+    try {
+      await fetch(`${SERVER_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.error(error);
+    }
   }
   return (
     <header className="flex justify-between">
