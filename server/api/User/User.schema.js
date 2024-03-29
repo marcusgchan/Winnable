@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
   nickName: String,
   userName: String,
-  password: String,
+  discord_id: String,
   gamesPlayed: Number,
   gamesWon: Number,
   dateCreated: Date,

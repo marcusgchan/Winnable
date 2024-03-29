@@ -2,9 +2,10 @@ const express = require('express');
 const lobbyRoutes = express.Router();
 
 const lobbyHandlers = require('./Lobby.handlers');
+const { requireLogin, requireHost } = require('../../auth/auth.middleware')
 
 // POST /api/lobby - Create a new lobby
-lobbyRoutes.post('/', lobbyHandlers.createLobby);
+lobbyRoutes.post('/', requireLogin, lobbyHandlers.createLobby);
 
 // GET /api/lobby - Get all lobbies
 lobbyRoutes.get('/', lobbyHandlers.getAllLobbies);
@@ -13,7 +14,7 @@ lobbyRoutes.get('/', lobbyHandlers.getAllLobbies);
 lobbyRoutes.get('/:id', lobbyHandlers.getLobby);
 
 // PUT /api/lobby/id - Update a lobby with given ID
-lobbyRoutes.put('/:id', lobbyHandlers.updateLobby);
+lobbyRoutes.put('/:id', requireHost, lobbyHandlers.updateLobby);
 
 // DELETE /api/lobby/id - Delete a lobby with given ID
 lobbyRoutes.delete('/:id', lobbyHandlers.deleteLobby);

@@ -66,4 +66,27 @@ async function deleteUser(req, res) {
   }
 }
 
-module.exports = { createUser, getAllUsers, getUser, updateUser, deleteUser };
+// Function not for HTTP - Get a user with given discord_id
+async function getUserByDiscordId(discord_id) {
+  try {
+    const user = await User.findOne({ discord_id });
+    return user;
+  } catch (err) {
+    console.error('Error finding user by discord_id: ', err);
+    return null;
+  }
+}
+
+// Function not for HTTP - Create a new user
+async function createUserByDiscordId(discord_id, userName) {
+  let newUser = new User({ discord_id, userName, dateCreated: Date.now(), lastUpdated: Date.now() });
+  try {
+    const savedUser = await newUser.save();
+    return savedUser;
+  } catch (err) {
+    console.error('Error creating user by discord_id: ', err);
+    return null;
+  }
+}
+
+module.exports = { createUser, getAllUsers, getUser, updateUser, deleteUser, getUserByDiscordId, createUserByDiscordId };

@@ -8,6 +8,7 @@ const LobbySchema = new mongoose.Schema({
   gameNumbers: Number, // number of games to compete in
   dateCreated: Date,
   lastUpdated: Date,
+  host: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   teamOne: {
     captain: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
