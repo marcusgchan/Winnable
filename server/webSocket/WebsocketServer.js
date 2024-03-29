@@ -4,7 +4,8 @@ const { retrieveAllLobbies, retrieveLobbyById, updateLobbyById } = require('../a
 // { lobby1: [ { user1: "", ws: {} } ] , lobby2: { user3: ws } }
 // I think this way is better cuz either way we have to get updated lobby object from the db and we can just look at who's in the lobby
 // [ { userId: "", ws: {} } ]
-const clients = [];
+// const clients = [];
+const clients = {};
 
 function startWebSocketServer(port) {
   const wss = new WebSocket.Server({ port });
@@ -27,8 +28,13 @@ function startWebSocketServer(port) {
 
   // on open connection, send notification to everyone
   // TODO: only send notification to everyone in the same lobby
-  wss.on('onOpen', (ws, userId, data) => {
-    clients.forEach((client) => {
+  wss.on('onOpen', (ws, userId, lobbyId, data) => {
+    const connectionMessage = {}
+    // On connection, check what the game state is.
+    // If the game is in progress, send the user to the appropriate screen.
+    // Don't allow a NEW user join a game that is already in progress.
+    // ws.send(`Welcome ${userId}, here I would pass some game data`)
+    clients[lobbyId].forEach((client) => {
       if (client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(`User ${userId} has connected`);
       }
@@ -39,15 +45,16 @@ function startWebSocketServer(port) {
   wss.on('connection', (ws) => {
     // All messages received from the clients go through here
     ws.on('message', (message) => {
-      const { userId, data, event } = JSON.parse(message);
+      const { userId, lobbyId, data, event } = JSON.parse(message);
 
       console.log('received from client', JSON.parse(message));
 
       // Check which event to trigger based on the client's message
       switch (event) {
         case 'onOpen':
-          clients.push({ userId, ws });
-          wss.emit('onOpen', ws, userId, data);
+          if (!clients[lobbyId]) clients[lobbyId] = [{ userId, ws }];
+          else clients[lobbyId].push({ userId, ws });
+          wss.emit('onOpen', ws, userId, lobbyId, data);
           break;
         case 'simpleMessage':
           wss.emit('simpleMessage', ws, userId, data);

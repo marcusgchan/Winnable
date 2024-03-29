@@ -7,6 +7,13 @@ async function login(req, res) {
   res.redirect(process.env.REDIRECT_URI);
 }
 
+async function loginTest(req, res) {
+  const id = crypto.randomUUID()
+  const username = "testuser" + id
+  req.session.user = { id, username };
+  res.redirect(process.env.FRONTEND_URL);
+}
+
 // Access token exchange
 async function callback(req, res) {
   const { code } = req.query;
@@ -107,4 +114,12 @@ async function logout(req, res) {
   res.json({ user: null });
 }
 
-module.exports = { login, callback, refresh, revoke, authorize, logout };
+module.exports = {
+  login,
+  loginTest,
+  callback,
+  refresh,
+  revoke,
+  authorize,
+  logout
+};

@@ -23,15 +23,20 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { SERVER_URL } from "/src/lib/common/constants.js";
+import { initializeWebSocket } from "/src/lib/websocket/websocket";
+import { useNavigate, useLoaderData } from "react-router-dom";
 
 const createLobbySchema = z.object({
-  name: z.string().min(1),
+  lobbyName: z.string().min(1),
   description: z.string(),
   maxPlayers: z.coerce.number().int().min(1).max(10),
   numGames: z.coerce.number().int().min(1).max(10),
 });
 
 export function HomePage() {
+  const navigate = useNavigate();
+  const { user } = useLoaderData();
   const [lobbies, setLobbies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,6 +76,14 @@ export function HomePage() {
     return <div>Error: {error}</div>;
   }
 
+  function handleJoinLobby(lobbyId) {
+    if (!user) return;
+    initializeWebSocket(user.id, lobbyId);
+    console.log("Joining lobby", lobbyId);
+    // redirect to inside the lobby
+    navigate(`/${lobbyId}/draft-members`);
+  }
+
   return (
     <section className="space-y-8">
       <Card className="max-h-[500px] min-h-80 overflow-y-auto">
@@ -81,7 +94,7 @@ export function HomePage() {
           <ul className="space-y-2">
             {lobbies.map((lobby, index) => (
               <li key={lobby._id} className="flex justify-between">
-                <span>{lobby.lobbyName}</span>
+                <button onClick={() => handleJoinLobby(lobby._id)}>{lobby.lobbyName}</button>
 
                 <span>
                   {lobby.teamOne.members.length + lobby.teamTwo.members.length}/
@@ -103,13 +116,27 @@ function CreateLobbyModal() {
   const form = useForm({
     resolver: zodResolver(createLobbySchema),
     defaultValues: {
-      name: "",
+      lobbyName: "",
       description: "",
       maxPlayers: 10,
       numGames: 5,
     },
   });
-  const handleSubmit = form.handleSubmit((values) => {
+  const handleSubmit = form.handleSubmit(async (values) => {
+    try {
+      await fetch(SERVER_URL + '/api/lobby', {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      })
+      // redirect to inside the lobby
+    } catch (err) {
+      console.error("Failed to create lobby", err);
+    }
+    
     console.log(values);
   });
   return (
@@ -125,7 +152,7 @@ function CreateLobbyModal() {
           <form onSubmit={handleSubmit} className="space-y-2">
             <FormField
               control={form.control}
-              name="name"
+              name="lobbyName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>

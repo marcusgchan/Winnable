@@ -38,6 +38,7 @@ const router = createBrowserRouter([
       {
         path: "", // Lobby
         element: <HomePage />,
+        loader: fetchUser,
       },
       {
         path: ":lobbyId/draft-members",
@@ -81,6 +82,7 @@ function Base({ children }) {
 
 function Header() {
   const loginUrl = `${SERVER_URL}/api/auth/login`;
+  const testLoginUrl = `${SERVER_URL}/api/auth/login-test`;
   const { user } = useLoaderData();
   const revalidator = useRevalidator();
   async function handleSignout() {
@@ -98,7 +100,12 @@ function Header() {
   return (
     <header className="flex justify-between">
       <span>Winnable</span>
-      {!user && <Link to={loginUrl}>Login</Link>}
+      {!user && (
+        <div style={{ display: 'flex', gap: '1rem'}}>
+          <Link to={testLoginUrl}>Login as Test User</Link>
+          <Link to={loginUrl}>Login</Link>
+        </div>
+      )}
       {user && <UserDropdown name={user.username} signOut={handleSignout} />}
       {/* <Button onClick={() => initializeWebSocket()}>Connect Websocket</Button>
       <Button onClick={() => sendMessage("this is a test")}>

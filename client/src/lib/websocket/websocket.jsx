@@ -1,8 +1,7 @@
 let ws;
 // TODO: should be userId of the current logged in user
-const userId = "65e53a1b6258c473f5e22d25";
-
-export function initializeWebSocket() {
+// const userId = "65e53a1b6258c473f5e22d25";
+export function initializeWebSocket(userId, lobbyId) {
   ws = new WebSocket("ws://localhost:8081");
 
   // send a message back to server once the connection has been opened
@@ -12,7 +11,8 @@ export function initializeWebSocket() {
     ws.send(
       JSON.stringify({
         userId,
-        data: `${userId} has connected`,
+        lobbyId,
+        data: `${userId} has connected to lobby ${lobbyId}`,
         event: "onOpen",
       }),
     );
