@@ -96,11 +96,9 @@ async function revoke(access_token) {
 }
 
 async function authorize(req, res) {
-  console.log('in authorize function')
   if (!req.session.user) {
     return res.json({ user: null, error: "Not logged in" });
   }
-  console.log('session found')
   res.json({ user: req.session.user });
 }
 
