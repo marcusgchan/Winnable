@@ -26,9 +26,7 @@ async function callback(req, res) {
     const response = await axios.post(`${API_ENDPOINT}/oauth2/token`, data, {
       headers: { "content-type": "application/x-www-form-urlencoded" },
     });
-    // Access tokens expire every 7 days
-    // console.log(response.data);
-
+    // Access tokens expire every 7 days, then it will ask for re-authorization
     const user = await axios.get(`${API_ENDPOINT}/users/@me`, {
       headers: { Authorization: `Bearer ${response.data.access_token}` },
     });
@@ -45,7 +43,6 @@ async function callback(req, res) {
     }
 
     req.session.user = { id: userLogin.id, username: userLogin.userName };
-    // console.log(req.session.cookie);
 
     return res.redirect(process.env.FRONTEND_URL);
   } catch (error) {
@@ -99,9 +96,11 @@ async function revoke(access_token) {
 }
 
 async function authorize(req, res) {
+  console.log('in authorize function')
   if (!req.session.user) {
     return res.json({ user: null, error: "Not logged in" });
   }
+  console.log('session found')
   res.json({ user: req.session.user });
 }
 

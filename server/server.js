@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const session = require("express-session");
-const MemoryStore = require("memorystore")(session);
+const MongoStore = require("connect-mongo");
 const startWebSocketServer = require("./webSocket/WebsocketServer");
 require("dotenv").config();
 
@@ -11,11 +11,10 @@ const { userRoutes } = require("./api/User/User.routes");
 const { lobbyRoutes } = require("./api/Lobby/Lobby.routes");
 const { authRoutes } = require("./auth/routes");
 
-const app = express();
+// Store
+const { store } = require("./auth/constants");
 
-const store = new MemoryStore({
-  checkPeriod: 86400000, // prune expired entries every 24h
-});
+const app = express();
 
 const PORT = process.env.PORT;
 
@@ -33,18 +32,15 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: false, sameSite: true, maxAge: 60000 * 60 * 24 },
+    cookie: { httpOnly: false, sameSite: true, maxAge: 86400000, unset: "destroy" }, // not sure if should set to destroy
     store,
   }),
 );
 
 app.use((req, res, next) => {
-  // Add store to req object
-  req.store = store;
-
-  // Attach user to req.session
+  // Attach user to req.session from mongo session store
   if (req.session.id) {
-    req.store.get(req.session.id, (_, session) => {
+    store.get(req.session.id, (error, session) => {
       if (session) {
         req.session.user = session.user;
       }
@@ -73,5 +69,3 @@ mongoose
   .catch((err) => {
     console.log(`Error connecting to MongoDB: ${err}`);
   });
-
-module.exports = { store };

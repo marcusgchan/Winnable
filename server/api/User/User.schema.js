@@ -5,7 +5,6 @@ const UserSchema = new mongoose.Schema({
   nickName: String,
   userName: String,
   discord_id: String,
-  password: String,
   gamesPlayed: Number,
   gamesWon: Number,
   dateCreated: Date,
