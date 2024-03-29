@@ -1,5 +1,6 @@
 const { Lobby } = require('./Lobby.schema');
 const { retrieveAllLobbies, retrieveLobbyById, updateLobbyById } = require('./Lobby');
+const { User } = require('../User/User.schema');
 
 // POST /api/lobby - Create a new lobby
 async function createLobby(req, res) {
@@ -7,6 +8,8 @@ async function createLobby(req, res) {
     let newLobby = new Lobby(req.body);
     newLobby.dateCreated = Date.now();
     newLobby.lastUpdated = Date.now();
+    const hostUser = await User.findById(req.session.user.id);
+    newLobby.host = hostUser._id;
 
     const savedLobby = await newLobby.save();
 

@@ -2,9 +2,10 @@ const express = require('express');
 const lobbyRoutes = express.Router();
 
 const lobbyHandlers = require('./Lobby.handlers');
+const { requireLogin } = require('../../auth/auth.middleware')
 
 // POST /api/lobby - Create a new lobby
-lobbyRoutes.post('/', lobbyHandlers.createLobby);
+lobbyRoutes.post('/', requireLogin, lobbyHandlers.createLobby);
 
 // GET /api/lobby - Get all lobbies
 lobbyRoutes.get('/', lobbyHandlers.getAllLobbies);
