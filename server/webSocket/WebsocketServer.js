@@ -71,6 +71,7 @@ function startWebSocketServer(port) {
     });
 
     ws.on('close', (code, message) => {
+      // Delete the user websocket from memory
       const { userId, lobbyId } = JSON.parse(message);
       console.log('User left lobby', userId, lobbyId);
       const newClients = clients[lobbyId].filter((connection) => connection.userId !== userId);

@@ -34,6 +34,7 @@ export function initializeWebSocket(userId, lobbyId) {
 
 // Call this function when client leaves the lobby
 export function closeWebSocket(userId, lobbyId) {
+  // Pass this to delete from memory
   const message = { userId, lobbyId}
   if (ws) {
     ws.close(1000, JSON.stringify(message));
