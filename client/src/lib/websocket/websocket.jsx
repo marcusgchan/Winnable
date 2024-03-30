@@ -33,15 +33,16 @@ export function initializeWebSocket(userId, lobbyId) {
 }
 
 // Call this function when client leaves the lobby
-export function closeWebSocket() {
+export function closeWebSocket(userId, lobbyId) {
+  const message = { userId, lobbyId}
   if (ws) {
-    ws.close();
+    ws.close(1000, JSON.stringify(message));
   }
 }
 
 // used to send the current lobby state to the websocket connection
 // takes in a lobby object
-export function updateLobby(lobbyObj) {
+export function updateLobby(userId, lobbyObj) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ userId, data: lobbyObj, event: "updateLobby" }));
   } else {

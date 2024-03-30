@@ -6,8 +6,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/lib/ui/card";
+import { closeWebSocket } from "/src/lib/websocket/websocket";
+import { useNavigate, useLoaderData, useParams } from "react-router-dom";
 
 export function DraftMembersPage() {
+  const navigate = useNavigate();
+  const { user } = useLoaderData();
+  const { lobbyId } = useParams()
+
+  function leaveLobby() {
+    navigate("/");
+    closeWebSocket(user.id, lobbyId);
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-center text-2xl font-bold ">
@@ -47,6 +58,7 @@ export function DraftMembersPage() {
         <div className="flex flex-row items-center gap-2 [grid-area:btns] md:flex-col md:items-start">
           <Button>Randomize</Button>
           <Button>Start Game</Button>
+          <Button variant="destructive" onClick={() => leaveLobby()}>Leave Lobby</Button>
         </div>
         <Card className="flex min-h-96 flex-col [grid-area:team2]">
           <CardHeader>

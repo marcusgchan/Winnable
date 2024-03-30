@@ -4,8 +4,12 @@ const { retrieveAllLobbies, retrieveLobbyById, updateLobbyById } = require('../a
 // { lobby1: [ { user1: "", ws: {} } ] , lobby2: { user3: ws } }
 // I think this way is better cuz either way we have to get updated lobby object from the db and we can just look at who's in the lobby
 // [ { userId: "", ws: {} } ]
-// const clients = [];
+// clients = { lobbyId: { userId: '', ws: {} } }
 const clients = {};
+
+function deleteClosedConnections(lobbyId, indexes) {
+  indexes.forEach((index) => clients[lobbyId].splice(index, 1));
+}
 
 function startWebSocketServer(port) {
   const wss = new WebSocket.Server({ port });
@@ -29,10 +33,9 @@ function startWebSocketServer(port) {
   // on open connection, send notification to everyone
   // TODO: only send notification to everyone in the same lobby
   wss.on('onOpen', (ws, userId, lobbyId, data) => {
-    const connectionMessage = {}
     // On connection, check what the game state is.
     // If the game is in progress, send the user to the appropriate screen.
-    // Don't allow a NEW user join a game that is already in progress.
+    // Don't allow a NEW user to join a game that is already in progress.
     // ws.send(`Welcome ${userId}, here I would pass some game data`)
     clients[lobbyId].forEach((client) => {
       if (client.ws.readyState === WebSocket.OPEN) {
@@ -67,8 +70,13 @@ function startWebSocketServer(port) {
       }
     });
 
-    ws.on('close', function () {
-      console.log('Client disconnected');
+    ws.on('close', (code, message) => {
+      const { userId, lobbyId } = JSON.parse(message);
+      console.log('User left lobby', userId, lobbyId);
+      const newClients = clients[lobbyId].filter((connection) => connection.userId !== userId);
+      if (newClients.length === 0) delete clients[lobbyId];
+      else clients[lobbyId] = newClients;
+      console.log(clients);
     });
   });
 }
