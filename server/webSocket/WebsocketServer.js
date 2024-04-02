@@ -36,18 +36,19 @@ function startWebSocketServer(sessionParser, server) {
 
       console.log('Session is parsed!');
 
-      wss.handleUpgrade(request, socket, head, async (ws, req) => {
+      wss.handleUpgrade(request, socket, head, (ws, req) => {
         // Check if the user can join the lobby
-        // const data = url.parse(req.url, true).query;
-        // console.log(data.lobby, request.session.user);
-        // const userId = request.session.user.id;
-        // const isUserAuthorized = await joinLobbyWS(data.lobby, userId);
-        // if (!isUserAuthorized) {
-        //   socket.write('HTTP/1.1 401 Unauthorized. Lobby is full or in game\r\n\r\n');
-        //   socket.destroy();
-        //   return;
-        // }
-        wss.emit('connection', ws, request);
+        const data = url.parse(req.url, true).query;
+        console.log(data.lobby, request.session.user);
+        const userId = request.session.user.id;
+        const isUserAuthorized = joinLobbyWS(data.lobby, userId);
+        if (isUserAuthorized) {
+          wss.emit('connection', ws, request);
+        } else {
+          socket.write('HTTP/1.1 401 Unauthorized. Lobby is full or in game\r\n\r\n');
+          socket.destroy();
+        }
+        
       });
     })
   });
@@ -73,8 +74,6 @@ function startWebSocketServer(sessionParser, server) {
     // Don't allow a NEW user to join a game that is already in progress.
     console.log('RUNING ON OPEN', userId, lobbyId, data);
     lobbies[lobbyId].forEach((user) => {
-      console.log('ATTEMPTING sending message to user', user)
-      console.log(connections)
       if (connections[user].ws.readyState === WebSocket.OPEN) {
         console.log('sending message to user', user)
         connections[user].ws.send(`User ${userId} has connected`);
@@ -96,8 +95,8 @@ function startWebSocketServer(sessionParser, server) {
     if (!lobbies[lobbyId]) lobbies[lobbyId] = [userId];
     else lobbies[lobbyId] = [ ...lobbies[lobbyId], userId];
 
-    console.log(connections)
-    console.log(lobbies)
+    // console.log(connections)
+    // console.log(lobbies)
     ws.on('message', (message) => {
       const { data, event } = JSON.parse(message);
 
