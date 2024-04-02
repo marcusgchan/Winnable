@@ -1,18 +1,17 @@
 let ws;
 // TODO: should be userId of the current logged in user
 // const userId = "65e53a1b6258c473f5e22d25";
-export function initializeWebSocket(userId, lobbyId) {
-  ws = new WebSocket("ws://localhost:8081");
+export function initializeWebSocket(lobbyId) {
+  //  ws = new WebSocket(`ws://localhost:8080/?lobby=${lobbyId}`);
+  ws = new WebSocket(`ws://localhost:8080?lobby=${lobbyId}`);
 
   // send a message back to server once the connection has been opened
   // used to bind a userID with this websocket client
   ws.onopen = () => {
-    console.log("WebSocket connection established.");
+    console.log("WebSocket connection established, sending onOpen event");
     ws.send(
       JSON.stringify({
-        userId,
-        lobbyId,
-        data: `${userId} has connected to lobby ${lobbyId}`,
+        data: `User has connected to lobby ${lobbyId}`,
         event: "onOpen",
       }),
     );
@@ -20,7 +19,7 @@ export function initializeWebSocket(userId, lobbyId) {
 
   // This is where client would receive msg from the websocket server
   ws.onmessage = (event) => {
-    console.log("Message from server", event);
+    console.log("Message from server: ", event);
   };
 
   ws.onclose = () => {
@@ -33,9 +32,9 @@ export function initializeWebSocket(userId, lobbyId) {
 }
 
 // Call this function when client leaves the lobby
-export function closeWebSocket(userId, lobbyId) {
+export function closeWebSocket(lobbyId) {
   // Pass this to delete from memory
-  const message = { userId, lobbyId}
+  const message = { lobbyId }
   if (ws) {
     ws.close(1000, JSON.stringify(message));
   }

@@ -1,29 +1,65 @@
 const WebSocket = require('ws');
-const { retrieveAllLobbies, retrieveLobbyById, updateLobbyById } = require('../api/Lobby/Lobby');
+const url = require('url');
+const { retrieveAllLobbies, retrieveLobbyById, updateLobbyById, joinLobbyWS } = require('../api/Lobby/Lobby');
 
 // { lobby1: [ { user1: "", ws: {} } ] , lobby2: { user3: ws } }
 // I think this way is better cuz either way we have to get updated lobby object from the db and we can just look at who's in the lobby
 // [ { userId: "", ws: {} } ]
-// clients = { lobbyId: { userId: '', ws: {} } }
-const clients = {};
+// The problem with this way is that a user can be in multiple lobbies. By this I mean, in the db a user can be in lobbies A and B but just be in B as a ws connection.
+// Another user from A can update the lobby state have an active ws connection to A and send updates to 
+// lobbies = { lobbyId: [userId] }
+const lobbies = {};
+// Connections = { userId: { lobbyId, ws } }
+const connections = {}; // Ensure users are not in multiple lobbies
 
 function deleteClosedConnections(lobbyId, indexes) {
-  indexes.forEach((index) => clients[lobbyId].splice(index, 1));
+  indexes.forEach((index) => lobbies[lobbyId].splice(index, 1));
 }
 
-function startWebSocketServer(port) {
-  const wss = new WebSocket.Server({ port });
+// TO DO: Add MaxPayload, 
 
-  console.log('WebSocket server is now running on:', port);
+function startWebSocketServer(sessionParser, server) {
+  // server.listen(port, () => {
+  //   console.log('WebSocket server is now running on:', port);
+  // })
+  const wss = new WebSocket.Server({ clientTracking: true, noServer: true });
+
+  /* ----------------------------- Authentication ---------------------------- */
+  server.on('upgrade', (request, socket, head) => {
+    console.log('Parsing session from request...');
+    sessionParser(request, {}, () => {
+      if (!request.session.user) {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+
+      console.log('Session is parsed!');
+
+      wss.handleUpgrade(request, socket, head, async (ws, req) => {
+        // Check if the user can join the lobby
+        // const data = url.parse(req.url, true).query;
+        // console.log(data.lobby, request.session.user);
+        // const userId = request.session.user.id;
+        // const isUserAuthorized = await joinLobbyWS(data.lobby, userId);
+        // if (!isUserAuthorized) {
+        //   socket.write('HTTP/1.1 401 Unauthorized. Lobby is full or in game\r\n\r\n');
+        //   socket.destroy();
+        //   return;
+        // }
+        wss.emit('connection', ws, request);
+      });
+    })
+  });
 
   /* ----------------------------- Event Listeners ---------------------------- */
   wss.on('updateLobby', (ws, userId, data) => {
     updateLobby(ws, userId, data);
   });
 
-  // sennding message to every other client connected to websocket server
+  // sennding message to every other client connected to the same lobby
   wss.on('simpleMessage', (ws, userId, data) => {
-    clients.forEach((client) => {
+    lobbies.forEach((client) => {
       if (client.ws.readyState === WebSocket.OPEN && userId !== client.userId) {
         client.ws.send(`User ${userId} sent you a message`);
       }
@@ -31,32 +67,45 @@ function startWebSocketServer(port) {
   });
 
   // on open connection, send notification to everyone
-  // TODO: only send notification to everyone in the same lobby
   wss.on('onOpen', (ws, userId, lobbyId, data) => {
     // On connection, check what the game state is.
     // If the game is in progress, send the user to the appropriate screen.
     // Don't allow a NEW user to join a game that is already in progress.
-    // ws.send(`Welcome ${userId}, here I would pass some game data`)
-    clients[lobbyId].forEach((client) => {
-      if (client.ws.readyState === WebSocket.OPEN) {
-        client.ws.send(`User ${userId} has connected`);
+    console.log('RUNING ON OPEN', userId, lobbyId, data);
+    lobbies[lobbyId].forEach((user) => {
+      console.log('ATTEMPTING sending message to user', user)
+      console.log(connections)
+      if (connections[user].ws.readyState === WebSocket.OPEN) {
+        console.log('sending message to user', user)
+        connections[user].ws.send(`User ${userId} has connected`);
       }
     });
   });
 
   /* --------------- Main connection and event listener routing --------------- */
-  wss.on('connection', (ws) => {
-    // All messages received from the clients go through here
+  wss.on('connection', (ws, request) => {
+    // All messages received from the lobbies go through here
+    const userId = request.session.user.id;
+    const lobbyId = url.parse(request.url, true).query.lobby;
+    // Check if user is already in a lobby, if so, close the connection
+    if (connections[userId]) {
+      lobbies[connections[userId].lobbyId] = lobbies[connections[userId].lobbyId].filter((user) => user !== userId);
+      connections[userId].ws.close();
+    }
+    connections[userId] = { lobbyId, ws };
+    if (!lobbies[lobbyId]) lobbies[lobbyId] = [userId];
+    else lobbies[lobbyId] = [ ...lobbies[lobbyId], userId];
+
+    console.log(connections)
+    console.log(lobbies)
     ws.on('message', (message) => {
-      const { userId, lobbyId, data, event } = JSON.parse(message);
+      const { data, event } = JSON.parse(message);
 
       console.log('received from client', JSON.parse(message));
 
       // Check which event to trigger based on the client's message
       switch (event) {
         case 'onOpen':
-          if (!clients[lobbyId]) clients[lobbyId] = [{ userId, ws }];
-          else clients[lobbyId].push({ userId, ws });
           wss.emit('onOpen', ws, userId, lobbyId, data);
           break;
         case 'simpleMessage':
@@ -72,12 +121,11 @@ function startWebSocketServer(port) {
 
     ws.on('close', (code, message) => {
       // Delete the user websocket from memory
-      const { userId, lobbyId } = JSON.parse(message);
+      // const { data } = JSON.parse(message);
       console.log('User left lobby', userId, lobbyId);
-      const newClients = clients[lobbyId].filter((connection) => connection.userId !== userId);
-      if (newClients.length === 0) delete clients[lobbyId];
-      else clients[lobbyId] = newClients;
-      console.log(clients);
+      delete connections[userId];
+      lobbies[lobbyId] = lobbies[lobbyId].filter((user) => user !== userId);
+      console.log(lobbies);
     });
   });
 }
@@ -98,7 +146,7 @@ async function updateLobby(ws, userId, data) {
     const usersInLobby = [...teamOneCaptain, ...teamOneMembers, ...teamTwoCaptain, ...teamTwoMembers];
     console.log('users in lobby', usersInLobby.toString());
 
-    clients.forEach((client) => {
+    lobbies.forEach((client) => {
       if (client.ws.readyState === WebSocket.OPEN && usersInLobby.toString().includes(client.userId)) {
         client.ws.send(JSON.stringify(updatedLobby));
       }

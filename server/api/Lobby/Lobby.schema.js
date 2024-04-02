@@ -29,6 +29,7 @@ const LobbySchema = new mongoose.Schema({
       winnerTeam: String,
     },
   ],
+  isOpen: { type: Boolean, default: true },
 });
 
 const Lobby = mongoose.model('Lobby', LobbySchema);

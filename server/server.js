@@ -2,7 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const session = require("express-session");
-const MongoStore = require("connect-mongo");
+const http = require("http");
+const WebSocket = require('ws');
 const startWebSocketServer = require("./webSocket/WebsocketServer");
 require("dotenv").config();
 
@@ -18,6 +19,15 @@ const app = express();
 
 const PORT = process.env.PORT;
 
+const sessionParser = session({
+  name: "session",
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: false, sameSite: true, maxAge: 86400000, unset: "destroy" }, // not sure if should set to destroy
+  store,
+})
+
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
@@ -26,16 +36,7 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  session({
-    name: "session",
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { httpOnly: false, sameSite: true, maxAge: 86400000, unset: "destroy" }, // not sure if should set to destroy
-    store,
-  }),
-);
+app.use(sessionParser);
 
 app.use((req, res, next) => {
   // Attach user to req.session from mongo session store
@@ -51,18 +52,20 @@ app.use((req, res, next) => {
   }
 });
 
+const server = http.createServer(app);
+
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING)
   .then(() => {
     console.log(`Successfully connected to MongoDB`);
     // start websocket server
-    startWebSocketServer(process.env.WEBSOCKET_PORT);
+    startWebSocketServer(sessionParser, server);
     // Routes
     app.use("/api/user", userRoutes);
     app.use("/api/lobby", lobbyRoutes);
     app.use("/api/auth", authRoutes);
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   })

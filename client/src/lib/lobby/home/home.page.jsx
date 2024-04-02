@@ -78,7 +78,7 @@ export function HomePage() {
 
   function handleJoinLobby(lobbyId) {
     if (!user) return;
-    initializeWebSocket(user.id, lobbyId);
+    initializeWebSocket(lobbyId);
     console.log("Joining lobby", lobbyId);
     // redirect to inside the lobby
     navigate(`/${lobbyId}/draft-members`);
@@ -132,7 +132,7 @@ function CreateLobbyModal() {
         },
         body: JSON.stringify(values),
       })
-      // redirect to inside the lobby
+      // TO DO: redirect to inside the lobby
     } catch (err) {
       console.error("Failed to create lobby", err);
     }
