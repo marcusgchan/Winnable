@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/lib/ui/card";
+import { useRouteLoaderData } from "react-router-dom";
 //import { CreateLobbyModal } from './CreateLobbyModal';
 import {
   Dialog,
@@ -26,6 +27,7 @@ import { z } from "zod";
 import { SERVER_URL } from "/src/lib/common/constants.js";
 import { initializeWebSocket } from "/src/lib/websocket/websocket";
 import { useNavigate, useLoaderData } from "react-router-dom";
+import { toast } from "sonner";
 
 const createLobbySchema = z.object({
   lobbyName: z.string().min(1),
@@ -36,7 +38,7 @@ const createLobbySchema = z.object({
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { user } = useLoaderData();
+  const { user } = useRouteLoaderData("root");
   const [lobbies, setLobbies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -94,7 +96,9 @@ export function HomePage() {
           <ul className="space-y-2">
             {lobbies.map((lobby, index) => (
               <li key={lobby._id} className="flex justify-between">
-                <button onClick={() => handleJoinLobby(lobby._id)}>{lobby.lobbyName}</button>
+                <button onClick={() => handleJoinLobby(lobby._id)}>
+                  {lobby.lobbyName}
+                </button>
 
                 <span>
                   {lobby.teamOne.members.length + lobby.teamTwo.members.length}/
@@ -105,9 +109,11 @@ export function HomePage() {
           </ul>
         </CardContent>
       </Card>
-      <div className="text-center">
-        <CreateLobbyModal />
-      </div>
+      {user && (
+        <div className="text-center">
+          <CreateLobbyModal />
+        </div>
+      )}
     </section>
   );
 }
@@ -122,22 +128,27 @@ function CreateLobbyModal() {
       numGames: 5,
     },
   });
+  const navigate = useNavigate();
   const handleSubmit = form.handleSubmit(async (values) => {
     try {
-      await fetch(SERVER_URL + '/api/lobby', {
+      const res = await fetch(SERVER_URL + "/api/lobby", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(values),
-      })
-      // TO DO: redirect to inside the lobby
+      });
+      if (!res.ok) {
+        toast("Unable to create lobby");
+        return;
+      }
+      const lobby = await res.json();
+      // redirect to inside the lobby
+      navigate(`/${lobby._id}/draft-members`);
     } catch (err) {
-      console.error("Failed to create lobby", err);
+      toast("Unable to create lobby");
     }
-    
-    console.log(values);
   });
   return (
     <Dialog>

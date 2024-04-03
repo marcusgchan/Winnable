@@ -28,12 +28,14 @@ import { AuthProvider } from "./lib/auth/provider";
 import { fetchUser } from "./lib/auth/api";
 import { SERVER_URL } from "./lib/common/constants";
 import { Button } from "./lib/ui/button";
+import { Toaster } from "@/lib/ui/sonner";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Root />,
     loader: fetchUser,
+    id: "root",
     children: [
       {
         path: "", // Lobby
@@ -68,6 +70,7 @@ function Root() {
         <Header />
         <Outlet />
       </Base>
+      <Toaster />
     </AuthProvider>
   );
 }
@@ -102,7 +105,7 @@ function Header() {
     <header className="flex justify-between">
       <span>Winnable</span>
       {!user && (
-        <div style={{ display: 'flex', gap: '1rem'}}>
+        <div style={{ display: "flex", gap: "1rem" }}>
           <Link to={testLoginUrl}>Login as Test User</Link>
           <Link to={loginUrl}>Login</Link>
         </div>

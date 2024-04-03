@@ -6,23 +6,58 @@ import {
   CardHeader,
   CardTitle,
 } from "@/lib/ui/card";
-import { closeWebSocket } from "/src/lib/websocket/websocket";
 import { useNavigate, useLoaderData, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+
+function useWebSocket({ socketUrl, onMessage = () => {}, onClose = () => {} }) {
+  const ws = useMemo(() => new WebSocket(socketUrl), [socketUrl]);
+
+  ws.onopen = (e) => {
+    onMessage(e);
+  };
+
+  ws.onclose = () => {
+    onClose();
+  };
+
+  ws.onmessage = (e) => {
+    onMessage(e);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (ws.readyState === 1) {
+        ws.close();
+      }
+    };
+  }, [ws]);
+
+  return ws;
+}
 
 export function DraftMembersPage() {
   const navigate = useNavigate();
   const { user } = useLoaderData();
-  const { lobbyId } = useParams()
+  const { lobbyId } = useParams();
+  const [lobby, setLobby] = useState(null);
+  const ws = useWebSocket({
+    socketUrl: `ws://localhost:8080?lobby=${lobbyId}`,
+    onMessage(e) {
+      if (!e.data) {
+        return;
+      }
 
-  function leaveLobby() {
-    navigate("/");
-    closeWebSocket(user.id, lobbyId);
-  }
+      const lobbyState = JSON.parse(e.data);
+      setLobby(lobbyState);
+    },
+  });
+
+  if (!lobby) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
       <h1 className="text-center text-2xl font-bold ">
-        Welcome to Lobby Name!
+        Lobby {lobby.lobbyName}
       </h1>
       <div className="grid gap-2 [grid-template-areas:'btns''team1''team2'] md:grid-cols-[1fr_min-content_1fr] md:[grid-template-areas:'team1_btns_team2']">
         <Card className="flex min-h-96 flex-col [grid-area:team1]">
@@ -30,26 +65,7 @@ export function DraftMembersPage() {
             <CardTitle>Team 1</CardTitle>
           </CardHeader>
           <CardContent>
-            <MemberList
-              members={[
-                { name: "bob", id: "123" },
-                { id: "321", name: "joe" },
-                { id: "0", name: "joe" },
-                { id: "1", name: "joe" },
-                { id: "2", name: "joe" },
-                { id: "3", name: "joe" },
-                { id: "4", name: "joe" },
-                { id: "5", name: "joe" },
-                { id: "6", name: "joe" },
-                { id: "7", name: "joe" },
-                { id: "8", name: "joe" },
-                { id: "9", name: "joe" },
-                { id: "10", name: "joe" },
-                { id: "11", name: "joe" },
-                { id: "12", name: "joe" },
-                { id: "13", name: "joe" },
-              ]}
-            />
+            <MemberList members={lobby.teamOne.members} />
           </CardContent>
           <CardFooter className="mt-auto self-center">
             <Button variant="team1">Join Team</Button>
@@ -58,14 +74,16 @@ export function DraftMembersPage() {
         <div className="flex flex-row items-center gap-2 [grid-area:btns] md:flex-col md:items-start">
           <Button>Randomize</Button>
           <Button>Start Game</Button>
-          <Button variant="destructive" onClick={() => leaveLobby()}>Leave Lobby</Button>
+          <Button variant="destructive" onClick={() => navigate("/")}>
+            Leave Lobby
+          </Button>
         </div>
         <Card className="flex min-h-96 flex-col [grid-area:team2]">
           <CardHeader>
             <CardTitle>Team 2</CardTitle>
           </CardHeader>
           <CardContent>
-            <MemberList members={[{ name: "bob", id: "123" }]} />
+            <MemberList members={lobby.teamTwo.members} />
           </CardContent>
           <CardFooter className="mt-auto self-center">
             <Button variant="team2">Join Team</Button>
@@ -76,13 +94,13 @@ export function DraftMembersPage() {
   );
 }
 
-/** @param {{ members: {id: string, name: string}[] }} */
+/** @param {{ members: {id: string, username: string}[] }} */
 function MemberList({ members }) {
   return (
     <ul className="max-h-80 space-y-2 overflow-y-auto">
-      {members.map(({ id, name }) => (
+      {members.map(({ id, username }) => (
         <li key={id}>
-          <Member name={name} />
+          <Member name={username} />
         </li>
       ))}
     </ul>

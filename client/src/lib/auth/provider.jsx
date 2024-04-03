@@ -11,7 +11,6 @@ const AuthContext = createContext();
  */
 function AuthProvider({ children }) {
   const user = useLoaderData();
-  console.log(user);
   return <AuthContext.Provider value={user}>{children}</AuthContext.Provider>;
 }
 
