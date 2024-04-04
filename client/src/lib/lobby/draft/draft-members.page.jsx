@@ -9,12 +9,38 @@ import {
 import { useNavigate, useLoaderData, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
+// function useWebSocket({ socketUrl, onMessage = () => {}, onClose = () => {} }) {
+//   const wsRef = useRef(null);
+//   console.log("hook");
+//   useEffect(() => {
+//     const ws = new WebSocket(socketUrl);
+//     ws.onopen = (e) => {
+//       onMessage(e);
+//     };
+//
+//     ws.onclose = () => {
+//       onClose();
+//     };
+//
+//     ws.onmessage = (e) => {
+//       onMessage(e);
+//     };
+//
+//     wsRef.current = ws;
+//     return () => {
+//       if (ws.readyState === WebSocket.OPEN) {
+//         console.log("closing");
+//         ws.close(1000);
+//       }
+//     };
+//   }, [socketUrl]);
+//
+//   return wsRef.current;
+// }
+//
+
 function useWebSocket({ socketUrl, onMessage = () => {}, onClose = () => {} }) {
   const ws = useMemo(() => new WebSocket(socketUrl), [socketUrl]);
-
-  ws.onopen = (e) => {
-    onMessage(e);
-  };
 
   ws.onclose = () => {
     onClose();
@@ -26,12 +52,11 @@ function useWebSocket({ socketUrl, onMessage = () => {}, onClose = () => {} }) {
 
   useEffect(() => {
     return () => {
-      if (ws.readyState === 1) {
-        ws.close();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close(1000);
       }
     };
   }, [ws]);
-
   return ws;
 }
 
@@ -47,10 +72,22 @@ export function DraftMembersPage() {
         return;
       }
 
+      console.log("received", JSON.parse(e.data));
+
       const lobbyState = JSON.parse(e.data);
-      setLobby(lobbyState);
+      setLobby((prev) => {
+        console.log("in setter");
+        console.log(lobbyState === prev);
+        return lobbyState;
+      });
     },
   });
+
+  function joinTeam(teamNumber) {
+    ws.send(JSON.stringify({ event: "joinTeam", data: teamNumber }));
+  }
+
+  console.log("render");
 
   if (!lobby) return <div>Loading...</div>;
 
@@ -68,7 +105,9 @@ export function DraftMembersPage() {
             <MemberList members={lobby.teamOne.members} />
           </CardContent>
           <CardFooter className="mt-auto self-center">
-            <Button variant="team1">Join Team</Button>
+            <Button variant="team1" onClick={() => joinTeam(1)}>
+              Join Team
+            </Button>
           </CardFooter>
         </Card>
         <div className="flex flex-row items-center gap-2 [grid-area:btns] md:flex-col md:items-start">
@@ -86,7 +125,9 @@ export function DraftMembersPage() {
             <MemberList members={lobby.teamTwo.members} />
           </CardContent>
           <CardFooter className="mt-auto self-center">
-            <Button variant="team2">Join Team</Button>
+            <Button variant="team2" onClick={() => joinTeam(2)}>
+              Join Team
+            </Button>
           </CardFooter>
         </Card>
       </div>

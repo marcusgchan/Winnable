@@ -73,6 +73,46 @@ function startWebSocketServer(sessionParser, server) {
     });
   });
 
+  wss.on("joinTeam", (ws, user, lobbyId, data) => {
+    console.log("joinTeam", data);
+    const lobby = lobbies.get(lobbyId);
+    if (data === 1) {
+      const userInTeamOne = lobby.teamOne.members.some(
+        ({ id }) => id === user.id,
+      );
+      if (userInTeamOne) return;
+      const userIndex = lobby.teamTwo.members.findIndex(
+        ({ id }) => id === user.id,
+      );
+      lobby.teamTwo.members.splice(userIndex, 1);
+      lobby.teamOne.members.push(user);
+    }
+
+    if (data === 2) {
+      const userInTeamTwo = lobby.teamTwo.members.some(
+        ({ id }) => id === user.id,
+      );
+      if (userInTeamTwo) return;
+      const userIndex = lobby.teamOne.members.findIndex(
+        ({ id }) => id === user.id,
+      );
+      console.log("userIndex", userIndex);
+      lobby.teamOne.members.splice(userIndex, 1);
+      lobby.teamTwo.members.push(user);
+    }
+
+    console.log("lobby", lobby);
+    // console.log("connections", connections);
+    lobby.teamOne.members.forEach((member) => {
+      console.log("updating team one", member.id);
+      connections.get(member.id).ws.send(JSON.stringify(lobby));
+    });
+    lobby.teamTwo.members.forEach((member) => {
+      console.log("updating team2", member.id);
+      connections.get(member.id).ws.send(JSON.stringify(lobby));
+    });
+  });
+
   /* --------------- Main connection and event listener routing --------------- */
   wss.on("connection", async (ws, request) => {
     // All messages received from the lobbies go through here
@@ -83,18 +123,31 @@ function startWebSocketServer(sessionParser, server) {
     const prevConnection = connections.get(userId);
     if (prevConnection) {
       const prevLobby = lobbies.get(prevConnection.lobbyId);
-      if (prevLobby) {
-        const userTeam1Index = prevLobby.teamOne.members.indexOf(userId);
-        const userTeam2Index = prevLobby.teamTwo.members.indexOf(userId);
+      if (prevLobby && prevLobby._id.toString() !== lobbyId) {
+        const userTeam1Index = prevLobby.teamOne.members.findIndex(
+          ({ id }) => id === userId,
+        );
+        const userTeam2Index = prevLobby.teamTwo.members.findIndex(
+          ({ id }) => id === userId,
+        );
         if (userTeam1Index !== -1) {
           prevLobby.teamOne.members.splice(userTeam1Index, 1);
         } else {
           prevLobby.teamTwo.members.splice(userTeam2Index, 1);
         }
-        prevConnection.ws.close();
+        connections.set(userId, { lobbyId, ws, count: 1 });
+        console.log("previous lobby diff id", prevLobby);
+      } else if (prevLobby && prevLobby._id.toString() === lobbyId) {
+        console.log("incrementing count");
+        prevConnection.count += 1;
+      } else {
+        console.log("in else", prevConnection);
+        connections.set(userId, { lobbyId, ws, count: 1 });
       }
+    } else {
+      console.log("setting new connection");
+      connections.set(userId, { lobbyId, ws, count: 1 });
     }
-    connections.set(userId, { lobbyId, ws });
 
     // Check if the lobby state has been initialized
     if (!lobbies.get(lobbyId)) {
@@ -106,6 +159,7 @@ function startWebSocketServer(sessionParser, server) {
       }
 
       const lobbyState = lobby.toJSON();
+      console.log("lobby state", lobbyState._id.toString());
       lobbyState.teamOne.members.push(request.session.user);
       lobbies.set(lobbyId, lobbyState);
     }
@@ -113,9 +167,10 @@ function startWebSocketServer(sessionParser, server) {
     // Add user to team with the leaset number of players or team 1 if equal
     else {
       const lobby = lobbies.get(lobbyId);
+      console.log("lobby state initalized already", lobby);
       if (
-        lobby.teamOne.members.includes(userId) ||
-        lobby.teamTwo.members.includes(userId)
+        !lobby.teamOne.members.find(({ id }) => id === userId) &&
+        !lobby.teamTwo.members.find(({ id }) => id === userId)
       ) {
         const team1Count = lobby.teamOne.members.length;
         const team2Count = lobby.teamTwo.members.length;
@@ -143,6 +198,9 @@ function startWebSocketServer(sessionParser, server) {
         case "updateLobby":
           wss.emit("updateLobby", ws, userId, data);
           break;
+        case "joinTeam":
+          wss.emit("joinTeam", ws, request.session.user, lobbyId, data);
+          break;
         default:
           console.log("Unknown event: ", event);
       }
@@ -150,11 +208,26 @@ function startWebSocketServer(sessionParser, server) {
 
     ws.on("close", (code, message) => {
       console.log("User left lobby", userId, lobbyId);
+      const connection = connections.get(userId);
+
+      if (connection.count > 1) {
+        console.log("decrementing count");
+        connection.count -= 1;
+        console.log("connection", connection);
+        return;
+      }
+
+      console.log("deleting connection");
+
       connections.delete(userId);
 
       const lobby = lobbies.get(lobbyId);
-      const teamOneIndex = lobby.teamOne.members.indexOf(userId);
-      const teamTwoIndex = lobby.teamTwo.members.indexOf(userId);
+      const teamOneIndex = lobby.teamOne.members.findIndex(
+        ({ id }) => id === userId,
+      );
+      const teamTwoIndex = lobby.teamTwo.members.findIndex(
+        ({ id }) => id === userId,
+      );
       if (teamOneIndex !== -1) {
         lobby.teamOne.members.splice(teamOneIndex, 1);
         return;
