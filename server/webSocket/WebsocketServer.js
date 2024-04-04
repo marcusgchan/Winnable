@@ -175,10 +175,7 @@ function startWebSocketServer(sessionParser, server) {
       const connection = connections.get(userId);
 
       const index = connection.findIndex((con) => con.ws === ws);
-      connection.splice(
-        connection.findIndex((con) => con.ws === ws),
-        1,
-      );
+      connection.splice(index, 1);
 
       // Clear any broken connections
       connection.splice(
