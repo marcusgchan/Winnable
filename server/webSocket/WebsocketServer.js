@@ -175,15 +175,19 @@ function startWebSocketServer(sessionParser, server) {
       const connection = connections.get(userId);
 
       const index = connection.findIndex((con) => con.ws === ws);
-      console.log("index to delete", index);
       connection.splice(
         connection.findIndex((con) => con.ws === ws),
         1,
       );
 
-      const numOfConnectionsForCurrentLobby = connections
-        .get(userId)
-        .filter(({ lobbyId }) => lobbyId === lobbyId).length;
+      // Clear any broken connections
+      connection.splice(
+        connection.filter(({ ws }) => ws.readyState === WebSocket.CLOSED),
+      );
+
+      const numOfConnectionsForCurrentLobby = connection.filter(
+        (con) => con.lobbyId === lobbyId,
+      ).length;
 
       if (numOfConnectionsForCurrentLobby === 0) {
         const lobby = lobbies.get(lobbyId);
