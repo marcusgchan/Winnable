@@ -14,7 +14,7 @@ const {
 // Another user from A can update the lobby state have an active ws connection to A and send updates to
 // lobbies = { lobbyId: [userId] }
 const lobbies = new Map();
-// Connections = { userId: { lobbyId, ws } }
+// Connections = { userId: [ {lobbyId, ws} ] }
 const connections = new Map(); // Ensure users are not in multiple lobbies
 
 function deleteClosedConnections(lobbyId, indexes) {
@@ -181,7 +181,6 @@ function startWebSocketServer(sessionParser, server) {
         1,
       );
 
-      console.log("connections", connections);
       const numOfConnectionsForCurrentLobby = connections
         .get(userId)
         .filter(({ lobbyId }) => lobbyId === lobbyId).length;
