@@ -201,7 +201,7 @@ function startWebSocketServer(sessionParser, server) {
       }
 
       if (connections.length === 0) {
-        connections.delete(lobbyId);
+        connections.delete(userId);
       }
 
       broadcast(lobbyId);
