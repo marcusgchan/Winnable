@@ -7,58 +7,8 @@ import {
   CardTitle,
 } from "@/lib/ui/card";
 import { useNavigate, useLoaderData, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
-
-// function useWebSocket({ socketUrl, onMessage = () => {}, onClose = () => {} }) {
-//   const wsRef = useRef(null);
-//   console.log("hook");
-//   useEffect(() => {
-//     const ws = new WebSocket(socketUrl);
-//     ws.onopen = (e) => {
-//       onMessage(e);
-//     };
-//
-//     ws.onclose = () => {
-//       onClose();
-//     };
-//
-//     ws.onmessage = (e) => {
-//       onMessage(e);
-//     };
-//
-//     wsRef.current = ws;
-//     return () => {
-//       if (ws.readyState === WebSocket.OPEN) {
-//         console.log("closing");
-//         ws.close(1000);
-//       }
-//     };
-//   }, [socketUrl]);
-//
-//   return wsRef.current;
-// }
-//
-
-function useWebSocket({ socketUrl, onMessage = () => {}, onClose = () => {} }) {
-  const ws = useMemo(() => new WebSocket(socketUrl), [socketUrl]);
-
-  ws.onclose = () => {
-    onClose();
-  };
-
-  ws.onmessage = (e) => {
-    onMessage(e);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close(1000);
-      }
-    };
-  }, [ws]);
-  return ws;
-}
+import { useState } from "react";
+import { useWebSocket } from "@/lib/websocket/useWebSocket";
 
 export function DraftMembersPage() {
   const navigate = useNavigate();
