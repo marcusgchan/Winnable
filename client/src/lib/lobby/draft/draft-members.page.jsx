@@ -75,19 +75,13 @@ export function DraftMembersPage() {
       console.log("received", JSON.parse(e.data));
 
       const lobbyState = JSON.parse(e.data);
-      setLobby((prev) => {
-        console.log("in setter");
-        console.log(lobbyState === prev);
-        return lobbyState;
-      });
+      setLobby(lobbyState);
     },
   });
 
   function joinTeam(teamNumber) {
     ws.send(JSON.stringify({ event: "joinTeam", data: teamNumber }));
   }
-
-  console.log("render");
 
   if (!lobby) return <div>Loading...</div>;
 
