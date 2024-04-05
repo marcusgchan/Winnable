@@ -101,6 +101,22 @@ function startWebSocketServer(sessionParser, server) {
 
     broadcast(lobbyId);
   });
+
+  wss.on("kickPlayer", (userId, lobbyId, data) => {
+    const lobby = lobbies.get(lobbyId);
+
+    // Check if host is the one kicking the player
+    if (userId !== lobby.host.toString()) return;
+
+    const connection = connections.get(data);
+    const connectionToRemove = connection.filter(
+      (con) => con.lobbyId === lobbyId,
+    );
+    connectionToRemove.forEach(({ ws }) => {
+      ws.close();
+    });
+  });
+
   /* --------------- Main connection and event listener routing --------------- */
   wss.on("connection", async (ws, request) => {
     // All messages received from the lobbies go through here
@@ -145,6 +161,12 @@ function startWebSocketServer(sessionParser, server) {
           lobby.teamTwo.members.push(request.session.user);
         }
       }
+
+      // Assign host if host is not assigned
+      // Can happen if host joins then leaves and the lobby is empty
+      if (lobby.host === "") {
+        lobby.host = userId;
+      }
     }
 
     broadcast(lobbyId);
@@ -165,6 +187,9 @@ function startWebSocketServer(sessionParser, server) {
         case "joinTeam":
           wss.emit("joinTeam", ws, request.session.user, lobbyId, data);
           break;
+        case "kickPlayer":
+          wss.emit("kickPlayer", userId, lobbyId, data);
+          break;
         default:
           console.log("Unknown event: ", event);
       }
@@ -173,6 +198,8 @@ function startWebSocketServer(sessionParser, server) {
     ws.on("close", (code, message) => {
       console.log("User left lobby", userId, lobbyId);
       const connection = connections.get(userId);
+
+      if (!connection) return;
 
       const index = connection.findIndex((con) => con.ws === ws);
       connection.splice(index, 1);
@@ -186,8 +213,8 @@ function startWebSocketServer(sessionParser, server) {
         (con) => con.lobbyId === lobbyId,
       ).length;
 
+      const lobby = lobbies.get(lobbyId);
       if (numOfConnectionsForCurrentLobby === 0) {
-        const lobby = lobbies.get(lobbyId);
         const teamOneIndex = lobby.teamOne.members.findIndex(
           ({ id }) => id === userId,
         );
@@ -196,12 +223,35 @@ function startWebSocketServer(sessionParser, server) {
         );
         if (teamOneIndex !== -1) {
           lobby.teamOne.members.splice(teamOneIndex, 1);
-        } else {
+        }
+        if (teamTwoIndex !== -1) {
           lobby.teamTwo.members.splice(teamTwoIndex, 1);
+        }
+
+        // Find new host if host leaves
+        if (lobby.host.toString() === userId) {
+          const team = Math.floor(Math.random() * 2) + 1;
+          if (team === 1) {
+            if (lobby.teamOne.members.length > 0) {
+              lobby.host = lobby.teamOne.members[0].id;
+            } else if (lobby.teamTwo.members.length > 0) {
+              lobby.host = lobby.teamTwo.members[0].id;
+            } else {
+              lobby.host = "";
+            }
+          } else {
+            if (lobby.teamTwo.members.length > 0) {
+              lobby.host = lobby.teamTwo.members[0].id;
+            } else if (lobby.teamOne.members.length > 0) {
+              lobby.host = lobby.teamOne.members[0].id;
+            } else {
+              lobby.host = "";
+            }
+          }
         }
       }
 
-      if (connections.length === 0) {
+      if (connection.length === 0) {
         connections.delete(userId);
       }
 
