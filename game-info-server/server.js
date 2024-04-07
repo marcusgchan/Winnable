@@ -5,6 +5,13 @@ require('dotenv').config();
 
 app.use(express.json());
 
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
+
 const REQUEST_HEADERS = {
   Authorization: process.env.AUTHORIZATION,
   'Client-ID': process.env.CLIENT_ID,
