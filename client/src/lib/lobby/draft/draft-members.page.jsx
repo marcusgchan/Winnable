@@ -16,12 +16,14 @@ import {
   TooltipTrigger,
 } from "@/lib/ui/tooltip";
 import { Minus } from "lucide-react";
+import { ContinueDialog } from "@/lib/ui/continue-dialog";
 
 export function DraftMembersPage() {
   const navigate = useNavigate();
   const { user } = useLoaderData();
   const { lobbyId } = useParams();
   const [lobby, setLobby] = useState(null);
+  const [isContinueDialogOpen, setIsContinueDialogOpen] = useState(false)
   const ws = useWebSocket({
     socketUrl: `ws://localhost:8080?lobby=${lobbyId}`,
     onMessage(e) {
@@ -31,7 +33,11 @@ export function DraftMembersPage() {
 
       console.log("received", JSON.parse(e.data));
 
-      const lobbyState = JSON.parse(e.data);
+      const { lobbyState, redirectUrl } = JSON.parse(e.data);
+      if (redirectUrl) {
+        navigate('/', { replace: true });
+        return;
+      }
       setLobby(lobbyState);
     },
     onClose() {
@@ -62,6 +68,13 @@ export function DraftMembersPage() {
     ws.send(JSON.stringify({ event: "kickPlayer", data: id }));
   }
 
+  function handleStartGame() {
+    ws.send(JSON.stringify({ event: "endTeamDraft" }));
+    const navigateLink = `/6612dd03aa3cc8e6f1377254/draft-games/`;
+    navigate(navigateLink, { replace: true });
+    console.log('NAVIGATEINGINSDA')
+  }
+
   if (!lobby) return <div>Lobby doesn&apos;t exist</div>;
 
   if (!user) {
@@ -70,6 +83,7 @@ export function DraftMembersPage() {
 
   return (
     <div className="space-y-6">
+      <ContinueDialog redirectUrl={`${lobbyId}/draft-games`} isOpen={isContinueDialogOpen} />
       <h1 className="text-center text-2xl font-bold ">
         Lobby {lobby.lobbyName}
       </h1>
@@ -111,6 +125,7 @@ export function DraftMembersPage() {
                       lobby.teamOne.members.length === 0 ||
                       lobby.teamTwo.members.length === 0
                     }
+                    onClick={() => handleStartGame()}
                   >
                     Start Game
                   </Button>

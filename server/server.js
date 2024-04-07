@@ -11,6 +11,7 @@ require("dotenv").config();
 const { userRoutes } = require("./api/User/User.routes");
 const { lobbyRoutes } = require("./api/Lobby/Lobby.routes");
 const { authRoutes } = require("./auth/routes");
+const { gameRoutes } = require("./gameApi/routes");
 
 // Store
 const { store } = require("./auth/constants");
@@ -64,6 +65,7 @@ mongoose
     app.use("/api/user", userRoutes);
     app.use("/api/lobby", lobbyRoutes);
     app.use("/api/auth", authRoutes);
+    app.use("/api/game", gameRoutes);
 
     server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
