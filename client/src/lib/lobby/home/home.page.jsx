@@ -1,7 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/lib/ui/card";
 import { useRouteLoaderData } from "react-router-dom";
-//import { CreateLobbyModal } from './CreateLobbyModal';
 import {
   Dialog,
   DialogContent,
@@ -25,8 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { SERVER_URL } from "/src/lib/common/constants.js";
-import { initializeWebSocket } from "/src/lib/websocket/websocket";
-import { useNavigate, useLoaderData } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const createLobbySchema = z.object({
@@ -37,84 +33,67 @@ const createLobbySchema = z.object({
 });
 
 export function HomePage() {
-  const navigate = useNavigate();
   const { user } = useRouteLoaderData("root");
-  const [lobbies, setLobbies] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    async function fetchLobbies() {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_SERVER_URL}/api/lobby`,
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        try {
-          const data = await response.json();
-          setLobbies(data);
-        } catch (jsonParseError) {
-          console.error("Error parsing JSON:", jsonParseError);
-          setError("Error parsing server response");
-        }
-      } catch (error) {
-        console.error("Failed to fetch lobbies:", error);
-        setError("Failed to fetch. Check the console.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchLobbies();
-  }, []);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  function handleJoinLobby(lobbyId) {
-    if (!user) return;
-    initializeWebSocket(lobbyId);
-    console.log("Joining lobby", lobbyId);
-    // redirect to inside the lobby
-    navigate(`/${lobbyId}/draft-members`);
-  }
 
   return (
     <section className="space-y-8">
-      <Card className="max-h-[500px] min-h-80 overflow-y-auto">
-        <CardHeader>
-          <CardTitle>Lobby</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            {lobbies.map((lobby, index) => (
-              <li key={lobby._id} className="flex justify-between">
-                <button onClick={() => handleJoinLobby(lobby._id)}>
-                  {lobby.lobbyName}
-                </button>
-
-                <span>
-                  {lobby.teamOne.members.length + lobby.teamTwo.members.length}/
-                  {lobby.maxPlayers}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
       {user && (
-        <div className="text-center">
+        <div className="space-x-2 text-center">
+          <JoinLobbyModal />
           <CreateLobbyModal />
         </div>
       )}
+      {!user && (
+        <p className="text-center text-lg">Login to join or create a lobby</p>
+      )}
     </section>
+  );
+}
+
+function JoinLobbyModal() {
+  const form = useForm({
+    resolver: zodResolver(z.object({ lobbyId: z.string().min(1) })),
+    defaultValues: {
+      lobbyId: "",
+    },
+  });
+  const navigate = useNavigate();
+  const handleSubmit = form.handleSubmit(async (values) => {
+    navigate(`/${values.lobbyId}/draft-members`);
+  });
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="w-28">Join Lobby</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Join Lobby</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={handleSubmit} className="space-y-2">
+            <FormField
+              control={form.control}
+              name="lobbyId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lobby ID</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button className="mt-4" type="submit">
+                Join Lobby
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -157,7 +136,7 @@ function CreateLobbyModal() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Lobby</DialogTitle>
+          <DialogTitle className="w-28">Create Lobby</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={handleSubmit} className="space-y-2">

@@ -35,7 +35,9 @@ export function DraftMembersPage() {
       setLobby(lobbyState);
     },
     onClose() {
-      navigate("/");
+      if (lobby) {
+        navigate("/");
+      }
     },
   });
   const [tooltip, setTooltip] = useState(false);
@@ -60,7 +62,11 @@ export function DraftMembersPage() {
     ws.send(JSON.stringify({ event: "kickPlayer", data: id }));
   }
 
-  if (!lobby) return <div>Loading...</div>;
+  if (!lobby) return <div>Lobby doesn&apos;t exist</div>;
+
+  if (!user) {
+    <p>Login to join a lobby</p>;
+  }
 
   return (
     <div className="space-y-6">
