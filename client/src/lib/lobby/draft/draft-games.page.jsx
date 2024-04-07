@@ -1,14 +1,61 @@
 import { Button } from "@/lib/ui/button";
 import { Input } from "@/lib/ui/input";
 import { Textarea } from "@/lib/ui/textarea";
-import React from "react";
+import { GAME_INFO_SERVER_URL } from "/src/lib/common/constants.js";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+// mui
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
+import { debounce } from "@mui/material/utils";
+
 export function DraftGamesPage() {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+
+  async function searchGame(searchString) {
+    const GAME_INFO_SERVER_URL =
+      "https://game-info-server-hfythhryta-uw.a.run.app";
+    console.log("searchString", searchString);
+    console.log(GAME_INFO_SERVER_URL);
+    const results = await axios.post(`${GAME_INFO_SERVER_URL}/game-list`, {
+      searchString: searchString,
+    });
+    console.log(results);
+    setSearchResults(results);
+    return searchResults;
+  }
+
+  const top100Films = [
+    { label: "The Shawshank Redemption", year: 1994 },
+    { label: "The Godfather", year: 1972 },
+    { label: "The Godfather: Part II", year: 1974 },
+    { label: "The Dark Knight", year: 2008 },
+    { label: "12 Angry Men", year: 1957 },
+    { label: "Schindler's List", year: 1993 },
+    { label: "Pulp Fiction", year: 1994 },
+  ];
+
+  const handleInputChange = debounce((event, value) => {
+    console.log(event, value);
+    searchGame(value);
+  }, 400); // 400ms delay
+
   return (
     <div className="flex flex-col space-y-16 bg-card bg-gray-900 p-4">
       <div className="flex flex-1">
         {/* Sidebar for game search */}
         <div className="w-1/4 space-y-2 p-2">
-          <Input type="text" placeholder="Search Game" />
+          <Autocomplete
+            disablePortal
+            id="combo-box-demo"
+            options={searchResults}
+            renderInput={(params) => <TextField {...params} label="name" />}
+            onInputChange={handleInputChange}
+          />
+          {/* description */}
           <Textarea
             placeholder="Description/Rules"
             className="h-52  bg-gray-800"

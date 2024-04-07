@@ -30,6 +30,22 @@ import { SERVER_URL } from "./lib/common/constants";
 import { Button } from "./lib/ui/button";
 import { Toaster } from "@/lib/ui/sonner";
 
+// font
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
+
+// mui
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+  },
+});
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -60,7 +76,12 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router}></RouterProvider>;
+  return (
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <RouterProvider router={router}></RouterProvider>;
+    </ThemeProvider>
+  );
 }
 
 function Root() {
