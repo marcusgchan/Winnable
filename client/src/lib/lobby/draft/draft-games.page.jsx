@@ -1,7 +1,7 @@
 import { Button } from "@/lib/ui/button";
 import { Input } from "@/lib/ui/input";
 import { Textarea } from "@/lib/ui/textarea";
-import { GAME_INFO_SERVER_URL } from "/src/lib/common/constants.js";
+import { SERVER_URL } from "/src/lib/common/constants.js";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -9,39 +9,80 @@ import axios from "axios";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { debounce } from "@mui/material/utils";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
 
 export function DraftGamesPage() {
+  // lobby obj
+  const [lobbyObj, setLobbyObj] = useState({});
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  // Currently selected game
+  const [selectedGame, setSelectedGame] = useState({});
+  const [selectedGameDescription, setSelectedGameDescription] = useState("");
+  // List of all the games selecte
+  const [selectedGames, setSelectedGames] = useState([]);
+  const [isStartBtnAvailable, setIsStartBtnAvailable] = useState(false);
 
+  /* -------------------------------- useEffect ------------------------------- */
+  useEffect(() => {
+    let didCancel = false;
+
+    const lobbyId = window.location.href.split("/")[3];
+    async function fetchLobbyState() {
+      const lobbyState = await axios.get(`${SERVER_URL}/api/lobby/${lobbyId}`);
+      setLobbyObj(lobbyState.data);
+      return lobbyState.data;
+    }
+
+    if (!didCancel) {
+      fetchLobbyState();
+    }
+
+    return () => (didCancel = true);
+  }, []);
+
+  useEffect(() => {
+    if (selectedGames.length === lobbyObj.numGames) {
+      setIsStartBtnAvailable(true);
+    }
+    console.log(selectedGames);
+  }, [selectedGames]);
+
+  /* ---------------------------------- debug --------------------------------- */
+  useEffect(() => {
+    console.log(lobbyObj);
+  }, [lobbyObj]);
+
+  /* --------------------------------- Helpers -------------------------------- */
   async function searchGame(searchString) {
-    const GAME_INFO_SERVER_URL =
-      "https://game-info-server-hfythhryta-uw.a.run.app";
-    console.log("searchString", searchString);
-    console.log(GAME_INFO_SERVER_URL);
+    // Change this fam
+    const GAME_INFO_SERVER_URL = "http://localhost:8081";
     const results = await axios.post(`${GAME_INFO_SERVER_URL}/game-list`, {
       searchString: searchString,
     });
-    console.log(results);
-    setSearchResults(results);
-    return searchResults;
+    setSearchResults(results.data);
   }
 
-  const top100Films = [
-    { label: "The Shawshank Redemption", year: 1994 },
-    { label: "The Godfather", year: 1972 },
-    { label: "The Godfather: Part II", year: 1974 },
-    { label: "The Dark Knight", year: 2008 },
-    { label: "12 Angry Men", year: 1957 },
-    { label: "Schindler's List", year: 1993 },
-    { label: "Pulp Fiction", year: 1994 },
-  ];
-
+  // stagger search by a sec
   const handleInputChange = debounce((event, value) => {
-    console.log(event, value);
     searchGame(value);
-  }, 400); // 400ms delay
+  }, 1000); // 1000ms delay
+
+  // Add game to the selected list
+  function addGameToList(game, description) {
+    const gameObj = {
+      id: game.id,
+      name: game.name,
+      imageUrl: game.cover,
+      description,
+      // selectedBy:
+    };
+    setSelectedGames([...selectedGames, gameObj]);
+  }
+
+  function startGame() {}
 
   return (
     <div className="flex flex-col space-y-16 bg-card bg-gray-900 p-4">
@@ -51,16 +92,30 @@ export function DraftGamesPage() {
           <Autocomplete
             disablePortal
             id="combo-box-demo"
+            getOptionLabel={(option) => option.name}
             options={searchResults}
-            renderInput={(params) => <TextField {...params} label="name" />}
+            renderInput={(params) => <TextField {...params} label="Games" />}
             onInputChange={handleInputChange}
+            onChange={(event, newValue) => {
+              if (newValue) {
+                setSelectedGame(newValue);
+              }
+            }}
           />
           {/* description */}
           <Textarea
             placeholder="Description/Rules"
-            className="h-52  bg-gray-800"
+            className="h-52 bg-gray-800"
+            onChange={(event) => {
+              setSelectedGameDescription(event.target.value);
+            }}
           ></Textarea>
-          <button className="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600">
+          <button
+            className="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
+            onClick={() => {
+              addGameToList(selectedGame, selectedGameDescription);
+            }}
+          >
             Confirm
           </button>
         </div>
@@ -73,69 +128,77 @@ export function DraftGamesPage() {
             </h2>
             <div className="mb-2 flex items-center justify-between rounded bg-gray-800 p-2">
               <h3>Games Team 1</h3>
-              <span className="text-sm">3/10</span>
+              <span className="text-sm">
+                {Math.ceil(selectedGames.length / 2)}/
+                {Math.ceil(lobbyObj.numGames / 2)}
+              </span>
             </div>
             {/* Placeholder for selected games for Team 1 */}
             <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
               {/* Mockup of game slots */}
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team1">
-                Game 1
-              </div>
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team1">
-                Game 2
-              </div>
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team1">
-                Game 3
-              </div>
+              {selectedGames.map((game, index) => {
+                if (index % 2 === 0) {
+                  return (
+                    <div className="m-1 flex items-center justify-center rounded bg-team1 p-2">
+                      {game.name}
+                    </div>
+                  );
+                }
+              })}
 
               {/* More game slots */}
             </div>
 
             <div className="mb-2 flex items-center justify-between rounded bg-gray-800 p-2">
               <h3>Games Team 2</h3>
-              <span className="text-sm">3/10</span>
+              <span className="text-sm">
+                {Math.floor(selectedGames.length / 2)}/
+                {Math.floor(lobbyObj.numGames / 2)}
+              </span>
             </div>
             {/* Placeholder for selected games for Team 2 */}
             <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
-              {/* Mockup of game slots */}
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team2">
-                Game 1
-              </div>
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team2">
-                Game 2
-              </div>
-              <div className="m-1 flex h-10 w-1/4 items-center justify-center rounded bg-team2">
-                Game 3
-              </div>
-              {/* More game slots */}
+              {selectedGames.map((game, index) => {
+                if (index % 2 !== 0) {
+                  return (
+                    <div className="m-1 flex items-center justify-center rounded bg-team1 p-2">
+                      {game.name}
+                    </div>
+                  );
+                }
+              })}
             </div>
           </div>
 
           {/* Members list */}
-          <div className="m-2 flex-1">
+          <div className="m-2 max-w-72 flex-1">
             <div className="rounded bg-gray-800 p-2 shadow">
-              <h2 className="text-lg font-semibold">Team 1 Member list</h2>
-              {/* Placeholder for Team 1 members */}
-              <ul className="list-inside list-disc">
-                {/* Mockup list items */}
-                <li>Marcus</li>
-                <li>Kyle</li>
-                <li>Juan</li>
-                <li>Pritam</li>
-                {/* More list items */}
-              </ul>
+              <h2 className=" text-lg font-semibold">Team 1 Member list</h2>
+              <Stack
+                direction="row"
+                className="flex-1 flex-wrap gap-x-1 gap-y-1 "
+              >
+                <Chip label="Kyle" />
+                <Chip label="juantwotree" />
+                <Chip label="Kyle" />
+                <Chip label="Kyle" />
+                <Chip label="Kyle" />
+                <Chip label="Kyle" />
+              </Stack>
             </div>
             <div className="mt-4 rounded bg-gray-800 p-2 shadow">
               <h2 className="text-lg font-semibold">Team 2 Member list</h2>
-              {/* Placeholder for Team 2 members */}
-              <ul className="list-inside list-disc">
-                {/* Mockup list items */}
-                <li>Stephen</li>
-                <li>Jeffery</li>
-                <li>iShowMeat</li>
-                <li>Epstein</li>
-                {/* More list items */}
-              </ul>
+              <Stack
+                direction="row"
+                className="flex-1 flex-wrap gap-x-1 gap-y-1"
+              >
+                <Chip label="Kyle" />
+                <Chip label="Kyle" />
+                <Chip label="Kyle" />
+                <Chip label="Kyle" />
+                <Chip label="Kyle" />
+                <Chip label="Kyle" />
+              </Stack>
             </div>
           </div>
         </div>
@@ -143,7 +206,9 @@ export function DraftGamesPage() {
 
       {/* Start button */}
       <div className="text-center">
-        <Button>START</Button>
+        <Button disabled={!isStartBtnAvailable} onClick={() => startGame()}>
+          START
+        </Button>
       </div>
     </div>
   );
