@@ -1,126 +1,193 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+// mui
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import { Button } from "@/lib/ui/button";
+import Card from "@mui/material/Card";
+import CardActions from "@mui/material/CardActions";
+import CardContent from "@mui/material/CardContent";
+import CardMedia from "@mui/material/CardMedia";
+import Typography from "@mui/material/Typography";
 
-const teamOne = {
-  name: "Team 1",
-  score: 10,
-  membersCompeting: ["Marcus"],
-  memberList: ["Kyle", "Juan", "Pritam"],
-};
-
-const teamTwo = {
-  name: "Team 2",
-  score: -5,
-  membersCompeting: ["Stephen"],
-  memberList: ["Jeffery", "iShowMeat", "Epstein"],
-};
-
-const gameInfo = {
-  currentGame: {
-    name: "CS:GO",
-    rules: "1v1, no showing meat, no racial slurs (exceptions applied)",
+const mockLobby = {
+  teamOne: {
+    captain: [],
+    members: ["65fa33d0b39ee489c2a0ad79", "66135c4e5e31aaefbe08130c"],
   },
-};
-
-const nextgameInfo = {
-  nextGame: {
-    name: "Survival of the Fittest",
-    rules: "Same",
+  teamTwo: {
+    captain: [],
+    members: ["66135c4e5e31aaefbe08130c", "66135c4e5e31aaefbe08130c"],
   },
+  _id: "66136923c954f8ba9993c505",
+  lobbyName: "lobby bryant2",
+  description: "kobeey",
+  maxPlayers: 4,
+  numGames: 3,
+  isOpen: true,
+  games: [
+    {
+      id: 241,
+      cover: "images.igdb.com/igdb/image/upload/t_1080p/co7ms5.jpg",
+      name: "Counter-Strike",
+      description: "first to 16",
+    },
+    {
+      id: 242408,
+      cover: "images.igdb.com/igdb/image/upload/t_1080p/co7989.jpg",
+      name: "Counter-Strike 2",
+      description: "this and that",
+    },
+    {
+      id: 16957,
+      cover: "images.igdb.com/igdb/image/upload/t_1080p/co7wqu.jpg",
+      name: "Counter-Strike Nexon: Studio",
+    },
+    {
+      id: 152291,
+      cover: "images.igdb.com/igdb/image/upload/t_1080p/co39sk.jpg",
+      name: "Counter Attack",
+    },
+  ],
+  dateCreated: "2024-04-08T03:48:51.778Z",
+  lastUpdated: "2024-04-08T03:49:03.122Z",
+  host: "65fa33d0b39ee489c2a0ad79",
+  __v: 0,
 };
 
-export function GamePage() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4 text-white">
-      <header className="my-4 text-4xl">Winnable</header>
-      <main className="flex-grow">
-        <div className="grid grid-cols-1 gap-8 px-4 md:grid-cols-3 md:px-0">
-          <TeamColumn team={teamOne} />
-          <CurrentGameColumn gameInfo={gameInfo.currentGame} />
-          <NextGameColumn nextgameInfo={nextgameInfo.nextGame} />
-          <TeamColumn team={teamTwo} />
-        </div>
-      </main>
-      <div className="flex items-center justify-center space-x-10">
-        {/* Center align items and space-x-2 for spacing */}
-        <button className="flex gap-4 rounded bg-gray-500 px-2 py-1 text-white hover:bg-gray-600">
-          Team 1 Wins
-        </button>
-        <button className="m-5 flex gap-4 rounded bg-yellow-500 px-2 py-1 text-white hover:bg-yellow-600">
-          Randomize Players
-        </button>
-        <button className="flex gap-4 rounded bg-gray-500 px-2 py-1 text-white hover:bg-gray-600">
-          {" "}
-          Team 2 Wins
-        </button>
+export function GamePage({ ...props }) {
+  const [currentGameIndex, setCurrentGameIndex] = useState(0);
+  const [lobbyObj, setLobbyObj] = useState();
+  const [teamOneScore, setTeamOneScore] = useState(0);
+  const [teamTwoScore, setTeamTwoScore] = useState(0);
+
+  /* -------------------------------- useEffect ------------------------------- */
+  useEffect(() => {
+    setLobbyObj(mockLobby);
+  }, []);
+
+  useEffect(() => {
+    console.log(lobbyObj);
+  }, [lobbyObj]);
+
+  /* --------------------------------- Containers --------------------------------- */
+  function gameDisplay() {
+    const gameArr = lobbyObj.games;
+    const currentGame = gameArr[currentGameIndex];
+    const nextGame = gameArr[currentGameIndex + 1];
+
+    return (
+      <div className="flex flex-col gap-y-2">
+        {currentGame && (
+          <Card>
+            <CardMedia
+              component="img"
+              alt={currentGame.name}
+              height="140"
+              image={`https://${currentGame.cover}`}
+            />
+            <CardContent>
+              <Typography gutterBottom variant="h5" component="div">
+                {currentGame.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {currentGame.description}
+              </Typography>
+            </CardContent>
+            <CardActions className="flex justify-between">
+              <Button variant="team1" onClick={() => setGameWinner("teamOne")}>
+                &lt;&lt; Team One Wins
+              </Button>
+              <Button variant="team2" onClick={() => setGameWinner("teamTwo")}>
+                Team Two Wins &gt;&gt;
+              </Button>
+            </CardActions>
+          </Card>
+        )}
+        {nextGame && (
+          <Card>
+            <CardMedia
+              component="img"
+              alt={nextGame.name}
+              height="140"
+              image={`https://${nextGame.cover}`}
+            />
+            <CardContent>
+              <Typography gutterBottom variant="h5" component="div">
+                {nextGame.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {nextGame.description}
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-function TeamColumn({ team }) {
-  return (
-    <div className="rounded-lg bg-card p-4 shadow-lg">
-      <h2 className="mb-2 text-2xl">{team.name}</h2>
-      <h3 className="text-lg">Score: {team.score}</h3>
-      <h3 className="mb-2 mt-4">Players Competing</h3>
-      {team.membersCompeting.map((member, index) => (
-        <Player key={index} name={member} />
-      ))}
-      <h3 className="mb-2 mt-4">Member List</h3>
-      {team.memberList.map((member, index) => (
-        <Player key={index} name={member} pick />
-      ))}
-    </div>
-  );
-}
+  // team is either "teamOne" or "teamTwo"
+  function teamDisplay(team) {
+    let members;
+    let label;
+    if (team === "teamOne") {
+      label = "Team One";
+      members = lobbyObj.teamOne.members;
+    }
+    if (team === "teamTwo") {
+      label = "Team Two";
+      members = lobbyObj.teamTwo.members;
+    }
 
-function Player({ name, pick }) {
+    return (
+      <div className="flex min-w-60 flex-col justify-start gap-y-3">
+        <div className="rounded-lg bg-card p-4 shadow-lg">
+          <h2 className="mb-2 text-2xl">{label}</h2>
+          <h3 className="text-lg">
+            Score: {team === "teamOne" ? teamOneScore : teamTwoScore}
+          </h3>
+          <h3 className="mb-2 mt-4">Players Competing</h3>
+          {members.map((member, index) => (
+            <Stack direction="row">
+              <Chip label={member} className="mb-1 mr-1" />
+            </Stack>
+          ))}
+          <h3 className="mb-2 mt-4">Member List</h3>
+          {members.map((member, index) => (
+            <Stack direction="row">
+              <Chip label={member} className="mb-1 mr-1" />
+            </Stack>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* --------------------------------- Helpers -------------------------------- */
+  function setGameWinner(team) {
+    // increment scores
+    if (team === "teamOne") setTeamOneScore(teamOneScore + 1);
+    if (team === "teamTwo") setTeamTwoScore(teamTwoScore + 1);
+
+    // update lobbyobj game array to have the winner
+    let updatedGamesArr = lobbyObj.games;
+    updatedGamesArr[currentGameIndex].winnerTeam = team;
+    const newLobbyObj = { ...lobbyObj, games: updatedGamesArr };
+
+    // set the new states
+    setLobbyObj(newLobbyObj);
+    setCurrentGameIndex(currentGameIndex + 1);
+  }
+
   return (
-    <div className="my-4 flex w-full max-w-6xl items-center justify-between px-4">
-      <span>{name}</span>
-      {pick ? (
-        <button className="rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600">
-          Pick
-        </button>
-      ) : (
-        <button className="rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600">
-          Remove
-        </button>
+    <div className="flex min-h-screen flex-row flex-col items-center justify-start gap-x-6 bg-gray-900 p-4 text-white">
+      {lobbyObj && (
+        <div className="flex gap-x-6">
+          <div className="min-w-60">{teamDisplay("teamOne")}</div>
+          {gameDisplay()}
+
+          {teamDisplay("teamTwo")}
+        </div>
       )}
-    </div>
-  );
-}
-
-function CurrentGameColumn({ gameInfo }) {
-  const currentGameImageURL = "https://wallpapercave.com/wp/wp8709769.jpg";
-
-  return (
-    <div className="rounded-lg bg-card p-4 shadow-lg md:col-span-1">
-      <h2 className="mb-4 text-2xl">Current Game</h2>
-      <img
-        src={currentGameImageURL}
-        alt="Current Game"
-        className="my-2 h-auto w-full rounded-lg object-cover"
-      />
-
-      <h3 className="text-lg">{gameInfo.name}</h3>
-      <p className="mt-2">{gameInfo.rules}</p>
-    </div>
-  );
-}
-function NextGameColumn({ nextgameInfo }) {
-  const nextGameImageURL =
-    "https://seeklogo.com/images/V/valorant-logo-FAB2CA0E55-seeklogo.com.png";
-  return (
-    <div className="rounded-lg bg-card p-4 shadow-lg md:col-span-1">
-      <h1 className="mb-4 mt-4 text-2xl">Next Game</h1>
-      <img
-        src={nextGameImageURL}
-        alt="Next Game"
-        className="my-2 h-auto w-full rounded-lg object-cover"
-      />
-      <h2 className="text-lg">{nextgameInfo.nextGame}</h2>
-      <p className="mt-2">{nextgameInfo.rules}</p>
     </div>
   );
 }
