@@ -35,14 +35,14 @@ export function DraftMembersPage() {
 
       const { lobbyState, redirectUrl } = JSON.parse(e.data);
       if (redirectUrl) {
-        navigate('/', { replace: true });
+        navigate(redirectUrl, { replace: true });
         return;
       }
       setLobby(lobbyState);
     },
     onClose() {
       if (lobby) {
-        navigate("/");
+        setLobby(null);
       }
     },
   });
@@ -70,12 +70,12 @@ export function DraftMembersPage() {
 
   function handleStartGame() {
     ws.send(JSON.stringify({ event: "endTeamDraft" }));
-    const navigateLink = `/6612dd03aa3cc8e6f1377254/draft-games/`;
+    const navigateLink = `/${lobbyId}/draft-games/`;
     navigate(navigateLink, { replace: true });
-    console.log('NAVIGATEINGINSDA')
+    console.log('NAVIGATEINGINSDAAAAAAA')
   }
 
-  if (!lobby) return <div>Lobby doesn&apos;t exist</div>;
+  if (!lobby) return <div>Oops! Either the lobby doesn&apos;t exist, or they no longer want you there...</div>;
 
   if (!user) {
     <p>Login to join a lobby</p>;

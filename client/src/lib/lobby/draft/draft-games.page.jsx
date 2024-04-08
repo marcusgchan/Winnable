@@ -32,7 +32,7 @@ import { z } from "zod";
 import React, { useState, useEffect } from "react";
 import { SERVER_URL } from "/src/lib/common/constants.js";
 import { useWebSocket } from "@/lib/websocket/useWebSocket";
-import { redirect, useParams, useLoaderData, Link } from "react-router-dom";
+import { useParams, useLoaderData, Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const createGameSchema = z.object({
@@ -66,7 +66,10 @@ export function DraftGamesPage() {
 
       const { lobbyState, redirectUrl } = JSON.parse(e.data);
       lobbyState.pickingPlayerId = lobbyState.pickingPlayerId || lobbyState.host;
-      console.log("pickingPlayerId", lobbyState.pickingPlayerId)
+      console.log("pickingPlayerId", lobbyState.pickingPlayerId);
+      if (redirectUrl) {
+        console.log(redirectUrl)
+      }
       setLobby(lobbyState);
     },
     onClose() {
@@ -75,7 +78,7 @@ export function DraftGamesPage() {
   })
 
   const handleSubmitGameForm = selectGameForm.handleSubmit(async (values) => {
-    console.log('HANDLE SUBMIT DOING WORK!!!')
+    selectGameForm.reset();
     addGame(values);
   })
 
@@ -168,7 +171,7 @@ export function DraftGamesPage() {
 
       {/* Start button */}
       <div className="text-center">
-        <Button disabled={user.id !== lobby.host} onClick={() => startGame()}>START</Button>
+        <Button disabled={(user.id !== lobby.host) || (lobby.games.length === 0)} onClick={() => startGame()}>START</Button>
       </div>
     </div>
   );
@@ -245,7 +248,6 @@ function SearchGameModal({ selectGameForm }) {
                     selectGameForm.setValue("id", game.id);
                     selectGameForm.setValue("name", game.name);
                     selectGameForm.setValue("imageUrl", game.cover);
-                    console.log(selectGameForm.getValues("id"));
                     setIsLoadingGames(true);
                     setTimeout(() => setIsLoadingGames(false), 100);
                   }}>

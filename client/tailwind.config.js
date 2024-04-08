@@ -19,8 +19,8 @@ export default {
     },
     extend: {
       colors: {
-        team1: colors.pink["300"],
-        team2: colors.blue["300"],
+        team1: colors.amber["400"],
+        team2: colors.violet["400"],
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

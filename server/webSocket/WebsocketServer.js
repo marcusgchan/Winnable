@@ -60,10 +60,6 @@ function startWebSocketServer(sessionParser, server) {
   });
 
   /* ----------------------------- Event Listeners ---------------------------- */
-  wss.on("updateLobby", (ws, userId, data) => {
-    updateLobby(ws, userId, data);
-  });
-
   // sennding message to every other client connected to the same lobby
   wss.on("simpleMessage", (ws, userId, data) => {
     lobbies.forEach((client) => {
@@ -129,6 +125,7 @@ function startWebSocketServer(sessionParser, server) {
     lobby.games.push(data);
     lobby.pickingPlayerId = pickingPlayerId;
     broadcast(lobbyId);
+    // updateLobbyById(lobbyId, lobby);
   })
 
   wss.on("endTeamDraft", (ws, userId, lobbyId) => {
@@ -141,8 +138,13 @@ function startWebSocketServer(sessionParser, server) {
     lobby.isOpen = false;
     lobby.pickingPlayerId = lobby.teamOne.members[0].id;
     broadcast(lobbyId, `/${lobbyId}/draft-games`);
+    updateLobbyById(lobbyId, lobby);
   })
 
+  wss.on("endGameDraft", (ws, userId, lobbyId) => {
+    updateLobbyById(lobbyId, lobby);
+    broadcast(lobbyId, `/${lobbyId}/game`);
+  })
 
   wss.on("kickPlayer", (userId, lobbyId, data) => {
     const lobby = lobbies.get(lobbyId);
@@ -157,6 +159,7 @@ function startWebSocketServer(sessionParser, server) {
     connectionToRemove.forEach(({ ws }) => {
       ws.close();
     });
+    // updateLobbyById(lobbyId, lobby)
   });
 
   /* --------------- Main connection and event listener routing --------------- */
@@ -223,9 +226,6 @@ function startWebSocketServer(sessionParser, server) {
         case "simpleMessage":
           wss.emit("simpleMessage", ws, userId, data);
           break;
-        case "updateLobby":
-          wss.emit("updateLobby", ws, userId, data);
-          break;
         case "joinTeam":
           wss.emit("joinTeam", ws, request.session.user, lobbyId, data);
           break;
@@ -237,6 +237,9 @@ function startWebSocketServer(sessionParser, server) {
           break;
         case "endTeamDraft":
           wss.emit("endTeamDraft", ws, userId, lobbyId);
+          break;
+        case "endGameDraft":
+          wss.emit("endGameDraft", ws, userId, lobbyId);
           break;
         default:
           console.log("Unknown event:", event);
@@ -311,7 +314,10 @@ function startWebSocketServer(sessionParser, server) {
 function broadcast(lobbyId, redirectUrl="") {
   const lobby = lobbies.get(lobbyId);
   const data = {lobbyState: lobby, redirectUrl};
+  console.log(lobby.teamOne.members);
+  console.log(lobby.teamTwo.members);
   lobby.teamOne.members.forEach((member) => {
+    if (!connections.get(member.id)) return;
     connections.get(member.id).forEach(({ lobbyId: id, ws }) => {
       if (lobbyId === id) {
         ws.send(JSON.stringify(data));
@@ -319,6 +325,7 @@ function broadcast(lobbyId, redirectUrl="") {
     });
   });
   lobby.teamTwo.members.forEach((member) => {
+    if (!connections.get(member.id)) return;
     connections.get(member.id).forEach(({ lobbyId: id, ws }) => {
       if (lobbyId === id) {
         ws.send(JSON.stringify(data));
@@ -328,7 +335,7 @@ function broadcast(lobbyId, redirectUrl="") {
 }
 
 // data is the lobby object
-async function updateLobby(ws, userId, data) {
+async function updateLobbyInDatabase(lobbyId) {
   try {
     // 1. receive data on what to update in stringified JSON
     console.log("lobby state obj", data);
