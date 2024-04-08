@@ -4,24 +4,22 @@ const mongoose = require('mongoose');
 const LobbySchema = new mongoose.Schema({
   lobbyName: String,
   description: String,
-  maxPlayers: Number,
-  gameNumbers: Number, // number of games to compete in
+  maxPlayers: { type: Number, default: 10},
+  numGames: { type: Number, default: 5 }, // number of games to compete in
   dateCreated: Date,
   lastUpdated: Date,
   host: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   teamOne: {
-    captain: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     score: Number,
   },
   teamTwo: {
-    captain: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     score: Number,
   },
   games: [
     {
-      id: String,
+      id: Number,
       name: String,
       imageUrl: String,
       description: String,
@@ -30,6 +28,7 @@ const LobbySchema = new mongoose.Schema({
     },
   ],
   isOpen: { type: Boolean, default: true },
+  pickingPlayerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 });
 
 const Lobby = mongoose.model('Lobby', LobbySchema);

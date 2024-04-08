@@ -21,9 +21,19 @@ async function retrieveLobbyById(lobbyId) {
 
 async function updateLobbyById(lobbyId, keyValueObj) {
   try {
+    const newUpdatedLobby = { ...keyValueObj };
+    // Check keyValueObj members
+    if (keyValueObj.teamOne && keyValueObj.teamOne.members) {
+      const teamOneMembers = keyValueObj.teamOne.members.map((member) => member.id);
+      newUpdatedLobby.teamOne.members = teamOneMembers;
+    }
+    if (keyValueObj.teamTwo && keyValueObj.teamTwo.members) {
+      const teamTwoMembers = keyValueObj.teamTwo.members.map((member) => member.id);
+      newUpdatedLobby.teamTwo.members = teamTwoMembers;
+    }
     const updatedLobby = await Lobby.findByIdAndUpdate(
       lobbyId,
-      { ...keyValueObj, lastUpdated: Date.now() },
+      { ...newUpdatedLobby, lastUpdated: Date.now() },
       { new: true }
     );
     return updatedLobby;

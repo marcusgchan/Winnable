@@ -1,215 +1,370 @@
 import { Button } from "@/lib/ui/button";
 import { Input } from "@/lib/ui/input";
 import { Textarea } from "@/lib/ui/textarea";
+import { ScrollArea, ScrollBar } from "@/lib/ui/scrollarea";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/lib/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/lib/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/lib/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import React, { useState, useEffect } from "react";
 import { SERVER_URL } from "/src/lib/common/constants.js";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { useWebSocket } from "@/lib/websocket/useWebSocket";
+import { useParams, useLoaderData, Link } from "react-router-dom";
+import { toast } from "sonner";
 
-// mui
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
-import { debounce } from "@mui/material/utils";
-import Chip from "@mui/material/Chip";
-import Stack from "@mui/material/Stack";
+const createGameSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1),
+  imageUrl: z.string().min(1),
+  description: z.string().min(1),
+});
 
 export function DraftGamesPage() {
-  // lobby obj
-  const [lobbyObj, setLobbyObj] = useState({});
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  // Currently selected game
-  const [selectedGame, setSelectedGame] = useState({});
-  const [selectedGameDescription, setSelectedGameDescription] = useState("");
-  // List of all the games selecte
-  const [selectedGames, setSelectedGames] = useState([]);
-  const [isStartBtnAvailable, setIsStartBtnAvailable] = useState(false);
+  const { user } = useLoaderData();
+  const selectGameForm = useForm({
+    resolver: zodResolver(createGameSchema),
+    defaultValues: {
+      id: "",
+      name: "",
+      imageUrl: "",
+      description: "",
+    },
+  });
+  const [lobby, setLobby] = useState(null);
+  const { lobbyId } = useParams();
+  const ws = useWebSocket({
+    socketUrl: `ws://localhost:8080?lobby=${lobbyId}`,
+    onMessage(e) {
+      if (!e.data) {
+        return;
+      }
 
-  /* -------------------------------- useEffect ------------------------------- */
-  useEffect(() => {
-    let didCancel = false;
+      console.log("received", JSON.parse(e.data));
 
-    const lobbyId = window.location.href.split("/")[3];
-    async function fetchLobbyState() {
-      const lobbyState = await axios.get(`${SERVER_URL}/api/lobby/${lobbyId}`);
-      setLobbyObj(lobbyState.data);
-      return lobbyState.data;
-    }
+      const { lobbyState, redirectUrl } = JSON.parse(e.data);
+      lobbyState.pickingPlayerId =
+        lobbyState.pickingPlayerId || lobbyState.host;
+      console.log("pickingPlayerId", lobbyState.pickingPlayerId);
+      if (redirectUrl) {
+        console.log(redirectUrl);
+      }
+      setLobby(lobbyState);
+    },
+    onClose() {
+      console.log("closed");
+    },
+  });
 
-    if (!didCancel) {
-      fetchLobbyState();
-    }
+  const handleSubmitGameForm = selectGameForm.handleSubmit(async (values) => {
+    selectGameForm.reset();
+    addGame(values);
+  });
 
-    return () => (didCancel = true);
-  }, []);
-
-  useEffect(() => {
-    if (selectedGames.length === lobbyObj.numGames) {
-      setIsStartBtnAvailable(true);
-    }
-    console.log(selectedGames);
-  }, [selectedGames]);
-
-  /* ---------------------------------- debug --------------------------------- */
-  useEffect(() => {
-    console.log(lobbyObj);
-  }, [lobbyObj]);
-
-  /* --------------------------------- Helpers -------------------------------- */
-  async function searchGame(searchString) {
-    // Change this fam
-    const GAME_INFO_SERVER_URL = "http://localhost:8081";
-    const results = await axios.post(`${GAME_INFO_SERVER_URL}/game-list`, {
-      searchString: searchString,
-    });
-    setSearchResults(results.data);
+  function addGame(game) {
+    console.log("Adding Game", game);
+    ws.send(JSON.stringify({ event: "addGame", data: game }));
   }
 
-  // stagger search by a sec
-  const handleInputChange = debounce((event, value) => {
-    searchGame(value);
-  }, 1000); // 1000ms delay
-
-  // Add game to the selected list
-  function addGameToList(game, description) {
-    const gameObj = {
-      id: game.id,
-      name: game.name,
-      imageUrl: game.cover,
-      description,
-      // selectedBy:
-    };
-    setSelectedGames([...selectedGames, gameObj]);
+  function startGame() {
+    console.log("Game Draft Ended");
+    ws.send(JSON.stringify({ event: "endGameDraft" }));
   }
 
-  function startGame() {}
+  if (!user) {
+    <p>Login to join a lobby</p>;
+  }
+
+  if (!lobby) return <div>Loading...</div>;
+
+  if (lobby.isOpen === true)
+    return (
+      <div>
+        Team Draft has not ended.{" "}
+        <Link className="" to={`/${lobbyId}/draft-members`}>
+          Go back to Team Draft
+        </Link>
+      </div>
+    );
 
   return (
     <div className="flex flex-col space-y-16 bg-card bg-gray-900 p-4">
       <div className="flex flex-1">
         {/* Sidebar for game search */}
         <div className="w-1/4 space-y-2 p-2">
-          <Autocomplete
-            disablePortal
-            id="combo-box-demo"
-            getOptionLabel={(option) => option.name}
-            options={searchResults}
-            renderInput={(params) => <TextField {...params} label="Games" />}
-            onInputChange={handleInputChange}
-            onChange={(event, newValue) => {
-              if (newValue) {
-                setSelectedGame(newValue);
-              }
-            }}
-          />
-          {/* description */}
-          <Textarea
-            placeholder="Description/Rules"
-            className="h-52 bg-gray-800"
-            onChange={(event) => {
-              setSelectedGameDescription(event.target.value);
-            }}
-          ></Textarea>
-          <button
-            className="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
-            onClick={() => {
-              addGameToList(selectedGame, selectedGameDescription);
-            }}
-          >
-            Confirm
-          </button>
+          <Form {...selectGameForm}>
+            <form onSubmit={handleSubmitGameForm} className="space-y-2">
+              {selectGameForm.watch("name") && (
+                <div className="flex flex-row items-center gap-2">
+                  <img
+                    src={`https://${selectGameForm.getValues("imageUrl")}`}
+                    alt={selectGameForm.getValues("name")}
+                    className="h-24 w-24 rounded-sm"
+                  />
+                  <div className="font-semibold">
+                    {selectGameForm.getValues("name")}
+                  </div>
+                </div>
+              )}
+              <SearchGameModal selectGameForm={selectGameForm} />
+              <FormField
+                control={selectGameForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Description/Rules"
+                        className="h-52 bg-gray-800"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                disabled={lobby.pickingPlayerId !== user.id}
+                onClick={() => {
+                  console.log("I AM SUBMITTING THE FORM OKAY??");
+                  console.log(
+                    selectGameForm.getValues([
+                      "id",
+                      "name",
+                      "imageUrl",
+                      "description",
+                    ]),
+                  );
+                }}
+              >
+                Add Game
+              </Button>
+            </form>
+          </Form>
         </div>
 
         {/* Selected games and members list */}
-        <div className="flex flex-1 flex-col p-2 md:flex-row">
-          <div className="m-2 flex-1">
-            <h2 className="mb-2 rounded bg-gray-800 p-2 text-lg font-semibold">
-              Selected Games
-            </h2>
-            <div className="mb-2 flex items-center justify-between rounded bg-gray-800 p-2">
-              <h3>Games Team 1</h3>
+        <div className="flex w-3/4 flex-1 flex-col p-2 md:flex-row">
+          <Card className="w-1/2">
+            <CardHeader className="flex flex-row items-center justify-between p-4">
+              <CardTitle className="text-lg">Selected Games</CardTitle>
               <span className="text-sm">
-                {Math.ceil(selectedGames.length / 2)}/
-                {Math.ceil(lobbyObj.numGames / 2)}
+                {lobby.games.length}/{lobby.numGames}
               </span>
-            </div>
-            {/* Placeholder for selected games for Team 1 */}
-            <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
-              {/* Mockup of game slots */}
-              {selectedGames.map((game, index) => {
-                if (index % 2 === 0) {
-                  return (
-                    <div className="m-1 flex items-center justify-center rounded bg-team1 p-2">
-                      {game.name}
-                    </div>
-                  );
-                }
-              })}
-
-              {/* More game slots */}
-            </div>
-
-            <div className="mb-2 flex items-center justify-between rounded bg-gray-800 p-2">
-              <h3>Games Team 2</h3>
-              <span className="text-sm">
-                {Math.floor(selectedGames.length / 2)}/
-                {Math.floor(lobbyObj.numGames / 2)}
-              </span>
-            </div>
-            {/* Placeholder for selected games for Team 2 */}
-            <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
-              {selectedGames.map((game, index) => {
-                if (index % 2 !== 0) {
-                  return (
-                    <div className="m-1 flex items-center justify-center rounded bg-team1 p-2">
-                      {game.name}
-                    </div>
-                  );
-                }
-              })}
-            </div>
-          </div>
+            </CardHeader>
+            <CardContent>
+              <SelectedGames games={lobby?.games} />
+            </CardContent>
+          </Card>
 
           {/* Members list */}
-          <div className="m-2 max-w-72 flex-1">
-            <div className="rounded bg-gray-800 p-2 shadow">
-              <h2 className=" text-lg font-semibold">Team 1 Member list</h2>
-              <Stack
-                direction="row"
-                className="flex-1 flex-wrap gap-x-1 gap-y-1 "
-              >
-                <Chip label="Kyle" />
-                <Chip label="juantwotree" />
-                <Chip label="Kyle" />
-                <Chip label="Kyle" />
-                <Chip label="Kyle" />
-                <Chip label="Kyle" />
-              </Stack>
-            </div>
-            <div className="mt-4 rounded bg-gray-800 p-2 shadow">
-              <h2 className="text-lg font-semibold">Team 2 Member list</h2>
-              <Stack
-                direction="row"
-                className="flex-1 flex-wrap gap-x-1 gap-y-1"
-              >
-                <Chip label="Kyle" />
-                <Chip label="Kyle" />
-                <Chip label="Kyle" />
-                <Chip label="Kyle" />
-                <Chip label="Kyle" />
-                <Chip label="Kyle" />
-              </Stack>
-            </div>
+          <div className="mx-2 flex w-1/2 flex-col gap-2">
+            <Card>
+              <CardHeader className="p-4">
+                <CardTitle className="text-lg">Team 1</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MembersList
+                  members={lobby?.teamOne.members}
+                  pickingPlayerId={lobby.pickingPlayerId}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="p-4">
+                <CardTitle className="text-lg">Team 2</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MembersList
+                  members={lobby?.teamTwo.members}
+                  pickingPlayerId={lobby.pickingPlayerId}
+                />
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
 
       {/* Start button */}
       <div className="text-center">
-        <Button disabled={!isStartBtnAvailable} onClick={() => startGame()}>
+        <Button
+          disabled={user.id !== lobby.host || lobby.games.length === 0}
+          onClick={() => startGame()}
+        >
           START
         </Button>
       </div>
     </div>
   );
+}
+
+function SearchGameModal({ selectGameForm }) {
+  const searchGameForm = useForm({
+    resolver: zodResolver(z.object({ gameName: z.string().min(1) })),
+    defaultValues: {
+      gameName: "",
+    },
+  });
+  const [isLoadingGames, setIsLoadingGames] = useState(false);
+  const [games, setGames] = useState([]);
+  const handleSubmit = searchGameForm.handleSubmit(async (values) => {
+    try {
+      const res = await fetch(
+        `${SERVER_URL}/api/game/search-games/${values.gameName}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      setIsLoadingGames(true);
+      const data = await res.json();
+      setGames(data);
+      setTimeout(() => setIsLoadingGames(false), 3000);
+      console.log("data", data);
+    } catch (err) {
+      toast("No games found");
+    }
+  });
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Search Game</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="w-28">Search Game</DialogTitle>
+        </DialogHeader>
+        <Form {...searchGameForm}>
+          <form onSubmit={handleSubmit} className="space-y-2">
+            <FormField
+              control={searchGameForm.control}
+              name="gameName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Game Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Search Game</Button>
+          </form>
+        </Form>
+        <h3>Search Results</h3>
+        {isLoadingGames && <div>Loading...</div>}
+        {games?.length > 0 && !isLoadingGames && (
+          <ScrollArea className="h-72">
+            {games.map((game) => (
+              <div
+                key={game.id}
+                className="flex w-11/12 flex-row items-center justify-between gap-2"
+              >
+                <div className="flex flex-row items-center justify-between gap-2">
+                  <img
+                    src={`https://${game.cover}`}
+                    alt={game.name}
+                    className="h-12 w-12"
+                  />
+                  <div className="text-sm">{game.name}</div>
+                </div>
+                <DialogClose>
+                  <Button
+                    variant={
+                      selectGameForm.getValues("id") === game.id
+                        ? "outline"
+                        : ""
+                    }
+                    onClick={() => {
+                      selectGameForm.setValue("id", game.id);
+                      selectGameForm.setValue("name", game.name);
+                      selectGameForm.setValue("imageUrl", game.cover);
+                      setIsLoadingGames(true);
+                      setTimeout(() => setIsLoadingGames(false), 100);
+                    }}
+                  >
+                    {selectGameForm.getValues("id") === game.id
+                      ? "Selected"
+                      : "Select"}
+                  </Button>
+                </DialogClose>
+              </div>
+            ))}
+            <ScrollBar />
+          </ScrollArea>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** @param {{ games: {id: string, name: string}[] }} */
+function SelectedGames({ games }) {
+  return (
+    <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
+      {games?.map((game) => {
+        return (
+          <div
+            key={game.id}
+            className="m-1 flex items-center justify-center rounded bg-team1 px-1 font-semibold"
+          >
+            {game.name}
+          </div>
+        );
+      })}
+      {/* More game slots */}
+    </div>
+  );
+}
+
+/** @param {{ members: {id: string, username: string}[] }} */
+function MembersList({ members, pickingPlayerId }) {
+  return (
+    <ul className="max-h-80 space-y-2 overflow-y-auto">
+      {members?.map(({ id, username }) => (
+        <li key={id} className="flex flex-row items-center gap-1">
+          {pickingPlayerId === id ? (
+            <span className="m-0 flex items-center justify-center rounded bg-team2 px-1">
+              {username}'s turn
+            </span>
+          ) : (
+            <Member name={username} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** @param {{ name: string }} */
+function Member({ name }) {
+  return <div className="">{name}</div>;
 }

@@ -60,10 +60,6 @@ function startWebSocketServer(sessionParser, server) {
   });
 
   /* ----------------------------- Event Listeners ---------------------------- */
-  wss.on("updateLobby", (ws, userId, data) => {
-    updateLobby(ws, userId, data);
-  });
-
   // sennding message to every other client connected to the same lobby
   wss.on("simpleMessage", (ws, userId, data) => {
     lobbies.forEach((client) => {
@@ -102,6 +98,54 @@ function startWebSocketServer(sessionParser, server) {
     broadcast(lobbyId);
   });
 
+  wss.on("addGame", (ws, userId, lobbyId, data) => {
+    const lobby = lobbies.get(lobbyId);
+    // Check if teams were finalized
+    // if (!lobby.isOpen) {
+    //   console.log("Teams were not finalized")
+    // }
+    // Check if pickingPlayerId is the same as the userId
+    // if (userId !== lobby.pickingPlayerId) return;
+    const totalGames = lobby.games.length + 1;
+    // Team 1 always starts first so if totalGames is even, it's team 1's turn
+    const team1Turn = totalGames % 2 === 0;
+    console.log('ADDING GAME')
+    let pickingPlayerIndex = null;
+    let pickingPlayerId = null;
+    // Figure out who's picking
+    if (team1Turn) {
+      pickingPlayerIndex = (totalGames / 2) % lobby.teamOne.members.length;
+      pickingPlayerId = lobby.teamOne.members[pickingPlayerIndex].id;
+      console.log('picking player id from TEAM 1:', pickingPlayerId)
+    } else {
+      pickingPlayerIndex = Math.floor(totalGames / 2) % lobby.teamTwo.members.length;
+      pickingPlayerId = lobby.teamTwo.members[pickingPlayerIndex].id;
+      console.log('picking player id from TEAM 2:', pickingPlayerId)
+    }
+    lobby.games.push(data);
+    lobby.pickingPlayerId = pickingPlayerId;
+    broadcast(lobbyId);
+    // updateLobbyById(lobbyId, lobby);
+  })
+
+  wss.on("endTeamDraft", (ws, userId, lobbyId) => {
+    const lobby = lobbies.get(lobbyId);
+    const lobbyHost = lobby.host.toString();
+    if (userId !== lobbyHost) {
+      console.log(`User ${userId} is not the host of lobby ${lobbyId} cause host is ${lobby.host}`);
+      return;
+    }
+    lobby.isOpen = false;
+    lobby.pickingPlayerId = lobby.teamOne.members[0].id;
+    broadcast(lobbyId, `/${lobbyId}/draft-games`);
+    updateLobbyById(lobbyId, lobby);
+  })
+
+  wss.on("endGameDraft", (ws, userId, lobbyId) => {
+    updateLobbyById(lobbyId, lobby);
+    broadcast(lobbyId, `/${lobbyId}/game`);
+  })
+
   wss.on("kickPlayer", (userId, lobbyId, data) => {
     const lobby = lobbies.get(lobbyId);
 
@@ -115,6 +159,7 @@ function startWebSocketServer(sessionParser, server) {
     connectionToRemove.forEach(({ ws }) => {
       ws.close();
     });
+    // updateLobbyById(lobbyId, lobby)
   });
 
   /* --------------- Main connection and event listener routing --------------- */
@@ -181,17 +226,23 @@ function startWebSocketServer(sessionParser, server) {
         case "simpleMessage":
           wss.emit("simpleMessage", ws, userId, data);
           break;
-        case "updateLobby":
-          wss.emit("updateLobby", ws, userId, data);
-          break;
         case "joinTeam":
           wss.emit("joinTeam", ws, request.session.user, lobbyId, data);
           break;
         case "kickPlayer":
           wss.emit("kickPlayer", userId, lobbyId, data);
           break;
+        case "addGame":
+          wss.emit("addGame", ws, userId, lobbyId, data);
+          break;
+        case "endTeamDraft":
+          wss.emit("endTeamDraft", ws, userId, lobbyId);
+          break;
+        case "endGameDraft":
+          wss.emit("endGameDraft", ws, userId, lobbyId);
+          break;
         default:
-          console.log("Unknown event: ", event);
+          console.log("Unknown event:", event);
       }
     });
 
@@ -260,26 +311,31 @@ function startWebSocketServer(sessionParser, server) {
   });
 }
 
-function broadcast(lobbyId) {
+function broadcast(lobbyId, redirectUrl="") {
   const lobby = lobbies.get(lobbyId);
+  const data = {lobbyState: lobby, redirectUrl};
+  console.log(lobby.teamOne.members);
+  console.log(lobby.teamTwo.members);
   lobby.teamOne.members.forEach((member) => {
+    if (!connections.get(member.id)) return;
     connections.get(member.id).forEach(({ lobbyId: id, ws }) => {
       if (lobbyId === id) {
-        ws.send(JSON.stringify(lobby));
+        ws.send(JSON.stringify(data));
       }
     });
   });
   lobby.teamTwo.members.forEach((member) => {
+    if (!connections.get(member.id)) return;
     connections.get(member.id).forEach(({ lobbyId: id, ws }) => {
       if (lobbyId === id) {
-        ws.send(JSON.stringify(lobby));
+        ws.send(JSON.stringify(data));
       }
     });
   });
 }
 
 // data is the lobby object
-async function updateLobby(ws, userId, data) {
+async function updateLobbyInDatabase(lobbyId) {
   try {
     // 1. receive data on what to update in stringified JSON
     console.log("lobby state obj", data);

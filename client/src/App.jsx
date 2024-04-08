@@ -66,6 +66,7 @@ const router = createBrowserRouter([
       {
         path: ":lobbyId/draft-games",
         element: <DraftGamesPage />,
+        loader: fetchUser,
       },
       {
         path: ":lobbyId/game",
