@@ -1,4 +1,4 @@
-const { User } = require('./User.schema');
+const { User } = require("./User.schema");
 
 // POST /api/user - Create a new user
 async function createUser(req, res) {
@@ -13,8 +13,8 @@ async function createUser(req, res) {
 
     res.json(savedUser);
   } catch (err) {
-    console.error('Error creating user: ', err);
-    res.status(500).json({ err: 'Failed to create user.' });
+    console.error("Error creating user: ", err);
+    res.status(500).json({ err: "Failed to create user." });
   }
 }
 
@@ -24,8 +24,8 @@ async function getAllUsers(req, res) {
     const users = await User.find();
     res.json(users);
   } catch (err) {
-    console.error('Error finding users: ', err);
-    res.status(500).json({ err: 'Failed to get users' });
+    console.error("Error finding users: ", err);
+    res.status(500).json({ err: "Failed to get users" });
   }
 }
 
@@ -35,8 +35,8 @@ async function getUser(req, res) {
     const user = await User.findById(req.params.id);
     res.json(user);
   } catch (err) {
-    console.error('Error finding user: ', err);
-    res.status(500).json({ err: 'Failed to get user' });
+    console.error("Error finding user: ", err);
+    res.status(500).json({ err: "Failed to get user" });
   }
 }
 
@@ -46,12 +46,12 @@ async function updateUser(req, res) {
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       { ...req.body, lastUpdated: Date.now() },
-      { new: true }
+      { new: true },
     );
     res.json(updatedUser);
   } catch (err) {
-    console.error('Error updateing user: ', err);
-    res.status(500).json({ err: 'Failed to update user' });
+    console.error("Error updateing user: ", err);
+    res.status(500).json({ err: "Failed to update user" });
   }
 }
 
@@ -61,8 +61,8 @@ async function deleteUser(req, res) {
     const deletedUser = await User.findByIdAndDelete(req.params.id);
     res.json(deletedUser);
   } catch (err) {
-    console.error('Error deleting a user: ', err);
-    res.status(500).json({ err: 'Failed to delete a user' });
+    console.error("Error deleting a user: ", err);
+    res.status(500).json({ err: "Failed to delete a user" });
   }
 }
 
@@ -72,21 +72,35 @@ async function getUserByDiscordId(discord_id) {
     const user = await User.findOne({ discord_id });
     return user;
   } catch (err) {
-    console.error('Error finding user by discord_id: ', err);
+    console.error("Error finding user by discord_id: ", err);
     return null;
   }
 }
 
 // Function not for HTTP - Create a new user
 async function createUserByDiscordId(discord_id, userName) {
-  let newUser = new User({ discord_id, userName, dateCreated: Date.now(), lastUpdated: Date.now() });
+  let newUser = new User({
+    discord_id,
+    userName,
+    dateCreated: Date.now(),
+    lastUpdated: Date.now(),
+  });
+  console.log("New user: ", newUser);
   try {
     const savedUser = await newUser.save();
     return savedUser;
   } catch (err) {
-    console.error('Error creating user by discord_id: ', err);
+    console.error("Error creating user by discord_id: ", err);
     return null;
   }
 }
 
-module.exports = { createUser, getAllUsers, getUser, updateUser, deleteUser, getUserByDiscordId, createUserByDiscordId };
+module.exports = {
+  createUser,
+  getAllUsers,
+  getUser,
+  updateUser,
+  deleteUser,
+  getUserByDiscordId,
+  createUserByDiscordId,
+};

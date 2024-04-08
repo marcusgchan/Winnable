@@ -28,24 +28,29 @@ import { AuthProvider } from "./lib/auth/provider";
 import { fetchUser } from "./lib/auth/api";
 import { SERVER_URL } from "./lib/common/constants";
 import { Button } from "./lib/ui/button";
+import { Toaster } from "@/lib/ui/sonner";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Root />,
     loader: fetchUser,
+    id: "root",
     children: [
       {
         path: "", // Lobby
         element: <HomePage />,
+        loader: fetchUser,
       },
       {
         path: ":lobbyId/draft-members",
         element: <DraftMembersPage />,
+        loader: fetchUser,
       },
       {
         path: ":lobbyId/draft-games",
         element: <DraftGamesPage />,
+        loader: fetchUser,
       },
       {
         path: ":lobbyId/game",
@@ -66,6 +71,7 @@ function Root() {
         <Header />
         <Outlet />
       </Base>
+      <Toaster />
     </AuthProvider>
   );
 }
@@ -81,6 +87,7 @@ function Base({ children }) {
 
 function Header() {
   const loginUrl = `${SERVER_URL}/api/auth/login`;
+  const testLoginUrl = `${SERVER_URL}/api/auth/login-test`;
   const { user } = useLoaderData();
   const revalidator = useRevalidator();
   async function handleSignout() {
@@ -98,7 +105,12 @@ function Header() {
   return (
     <header className="flex justify-between">
       <span>Winnable</span>
-      {!user && <Link to={loginUrl}>Login</Link>}
+      {!user && (
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <Link to={testLoginUrl}>Login as Test User</Link>
+          <Link to={loginUrl}>Login</Link>
+        </div>
+      )}
       {user && <UserDropdown name={user.username} signOut={handleSignout} />}
       {/* <Button onClick={() => initializeWebSocket()}>Connect Websocket</Button>
       <Button onClick={() => sendMessage("this is a test")}>

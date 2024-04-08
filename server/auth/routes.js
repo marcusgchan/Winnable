@@ -5,6 +5,9 @@ const { requireLogin, requireSameUser } = require("./auth.middleware");
 // Login for the first time
 authRoutes.get("/login", authHandlers.login);
 
+// Login as test user
+authRoutes.get("/login-test", authHandlers.loginTest);
+
 // Logout
 authRoutes.post("/logout", authHandlers.logout);
 
