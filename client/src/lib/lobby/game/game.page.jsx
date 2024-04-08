@@ -1,4 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useWebSocket } from "@/lib/websocket/useWebSocket";
+import { SERVER_URL } from "/src/lib/common/constants.js";
+import { useParams, useLoaderData, Link } from "react-router-dom";
+
 // mui
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
@@ -12,11 +16,11 @@ import Typography from "@mui/material/Typography";
 const mockLobby = {
   teamOne: {
     captain: [],
-    members: ["65fa33d0b39ee489c2a0ad79", "66135c4e5e31aaefbe08130c"],
+    members: [{ id: "66132ce8e79579329e960e6e", username: "kyl1699" }],
   },
   teamTwo: {
     captain: [],
-    members: ["66135c4e5e31aaefbe08130c", "66135c4e5e31aaefbe08130c"],
+    members: [{ id: "66135c4e5e31aaefbe08130c", username: "lyk9473" }],
   },
   _id: "66136923c954f8ba9993c505",
   lobbyName: "lobby bryant2",
@@ -60,6 +64,9 @@ export function GamePage({ ...props }) {
   const [teamOneScore, setTeamOneScore] = useState(0);
   const [teamTwoScore, setTeamTwoScore] = useState(0);
 
+  const { user } = useLoaderData();
+  const { lobbyId } = useParams();
+
   /* -------------------------------- useEffect ------------------------------- */
   useEffect(() => {
     setLobbyObj(mockLobby);
@@ -68,6 +75,27 @@ export function GamePage({ ...props }) {
   useEffect(() => {
     console.log(lobbyObj);
   }, [lobbyObj]);
+
+  /* ----------------------------------- ws ----------------------------------- */
+  // const ws = useWebSocket({
+  //   socketUrl: `ws://localhost:8080?lobby=${lobbyId}`,
+  //   onMessage(e) {
+  //     if (!e.data) {
+  //       return;
+  //     }
+
+  //     console.log("received", JSON.parse(e.data));
+
+  //     const { lobbyState, redirectUrl } = JSON.parse(e.data);
+  //     if (redirectUrl) {
+  //       console.log(redirectUrl);
+  //     }
+  //     setLobbyObj(lobbyState);
+  //   },
+  //   onClose() {
+  //     console.log("closed");
+  //   },
+  // });
 
   /* --------------------------------- Containers --------------------------------- */
   function gameDisplay() {
@@ -148,13 +176,13 @@ export function GamePage({ ...props }) {
           <h3 className="mb-2 mt-4">Players Competing</h3>
           {members.map((member, index) => (
             <Stack direction="row">
-              <Chip label={member} className="mb-1 mr-1" />
+              <Chip label={member.username} className="mb-1 mr-1" />
             </Stack>
           ))}
           <h3 className="mb-2 mt-4">Member List</h3>
           {members.map((member, index) => (
             <Stack direction="row">
-              <Chip label={member} className="mb-1 mr-1" />
+              <Chip label={member.username} className="mb-1 mr-1" />
             </Stack>
           ))}
         </div>
@@ -176,6 +204,8 @@ export function GamePage({ ...props }) {
     // set the new states
     setLobbyObj(newLobbyObj);
     setCurrentGameIndex(currentGameIndex + 1);
+
+    ws.send(JSON.stringify({ event: "setGameState", data: lobbyObj }));
   }
 
   return (

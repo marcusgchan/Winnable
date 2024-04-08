@@ -71,6 +71,7 @@ const router = createBrowserRouter([
       {
         path: ":lobbyId/game",
         element: <GamePage />,
+        loader: fetchUser,
       },
     ],
   },
@@ -80,7 +81,7 @@ function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <RouterProvider router={router}></RouterProvider>;
+      <RouterProvider router={router}></RouterProvider>
     </ThemeProvider>
   );
 }

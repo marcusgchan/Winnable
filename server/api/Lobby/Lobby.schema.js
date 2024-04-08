@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const LobbySchema = new mongoose.Schema({
   lobbyName: String,
   description: String,
-  maxPlayers: { type: Number, default: 10},
+  maxPlayers: { type: Number, default: 10 },
   numGames: { type: Number, default: 5 }, // number of games to compete in
   dateCreated: Date,
   lastUpdated: Date,
@@ -24,6 +24,8 @@ const LobbySchema = new mongoose.Schema({
       imageUrl: String,
       description: String,
       selectedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      teamOneCompetitor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+      teamTwoCompetitor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
       winnerTeam: String,
     },
   ],
