@@ -53,6 +53,8 @@ async function callback(req, res) {
 
     req.session.user = { id: userLogin.id, username: userLogin.userName };
 
+    console.log('callback req.session.user', req.session);
+
     return res.redirect(process.env.FRONTEND_URL);
   } catch (error) {
     console.log('ERROR IN TOKEN EXCHANGE');
