@@ -1,4 +1,6 @@
 let ws;
+import { SERVER_URL } from "../common/constants";
+
 // TODO: should be userId of the current logged in user
 // const userId = "65e53a1b6258c473f5e22d25";
 export function initializeWebSocket(lobbyId) {

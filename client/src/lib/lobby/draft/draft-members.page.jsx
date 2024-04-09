@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/lib/ui/tooltip";
 import { X } from "lucide-react";
+import { SERVER_URL } from "@/lib/common/constants";
 
 export function DraftMembersPage() {
   const navigate = useNavigate();
