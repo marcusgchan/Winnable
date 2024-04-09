@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const url = require('url');
+const util = require('util');
 const { retrieveAllLobbies, retrieveLobbyById, updateLobbyById, joinLobbyWS } = require('../api/Lobby/Lobby');
 
 // { lobby1: [ { user1: "", ws: {} } ] , lobby2: { user3: ws } }
@@ -124,10 +125,16 @@ function startWebSocketServer(sessionParser, server) {
     lobby.isOpen = false;
     lobby.pickingPlayerId = lobby.teamOne.members[0].id;
     broadcast(lobbyId, `/${lobbyId}/draft-games`);
+    console.log(
+      'ending team draft, current lobby state',
+      util.inspect(lobby, { showHidden: false, depth: null, colors: true })
+    );
+
     updateLobbyById(lobbyId, lobby);
   });
 
   wss.on('endGameDraft', (ws, userId, lobbyId) => {
+    console.log('ending game draft, current lobby state: ', lobbies.get(lobbyId));
     updateLobbyById(lobbyId, lobbies.get(lobbyId));
     broadcast(lobbyId, `/${lobbyId}/game`);
   });
