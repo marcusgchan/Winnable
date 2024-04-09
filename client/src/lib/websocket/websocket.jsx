@@ -6,7 +6,7 @@ import { SERVER_URL } from "../common/constants";
 export function initializeWebSocket(lobbyId) {
   //  ws = new WebSocket(`ws://localhost:8080/?lobby=${lobbyId}`);
   ws = new WebSocket(
-    `ws://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
+    `wss://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
   );
 
   // send a message back to server once the connection has been opened

@@ -91,7 +91,7 @@ export function GamePage({ ...props }) {
 
   /* ----------------------------------- ws ----------------------------------- */
   const ws = useWebSocket({
-    socketUrl: `ws://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
+    socketUrl: `wss://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
     onMessage(e) {
       if (!e.data) {
         return;

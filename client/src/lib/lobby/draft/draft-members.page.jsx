@@ -24,7 +24,7 @@ export function DraftMembersPage() {
   const { lobbyId } = useParams();
   const [lobby, setLobby] = useState(null);
   const ws = useWebSocket({
-    socketUrl: `ws://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
+    socketUrl: `wss://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
     onMessage(e) {
       if (!e.data) {
         return;
