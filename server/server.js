@@ -25,7 +25,8 @@ const sessionParser = session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, secure: true, sameSite: 'none', maxAge: 86400000 }, // not sure if should set to destroy
+  unset: 'destroy',
+  cookie: { httpOnly: false, secure: true, sameSite: 'none', maxAge: 86400000 }, // not sure if should set to destroy
   store,
 });
 
@@ -41,6 +42,7 @@ app.use(sessionParser);
 
 app.use((req, res, next) => {
   // Attach user to req.session from mongo session store
+  console.log('FETCHING MIDDLEWARE req.session.id', req.session.id);
   if (req.session.id) {
     store.get(req.session.id, (error, session) => {
       if (session) {
