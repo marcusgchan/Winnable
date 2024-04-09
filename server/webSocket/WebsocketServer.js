@@ -157,16 +157,17 @@ function startWebSocketServer(sessionParser, server) {
   // Handles update score, players competing, game winner
   // data is the entire lobby state
   wss.on('setGameState', (ws, userId, lobbyId, data) => {
-    const lobby = lobbies.get(lobbyId);
+    lobbies.set(lobbyId, data);
 
-    // Update score
-    lobby.teamOne.score = data.teamOne.score;
-    lobby.teamTwo.score = data.teamTwo.score;
+    if (data.teamOne.score + data.teamTwo.score === data.games.length) {
+      if (data.teamOne.score > data.teamTwo.score) broadcast(lobbyId, 'Team One');
+      if (data.teamOne.score < data.teamTwo.score) broadcast(lobbyId, 'Team Two');
+      if (data.teamOne.score == data.teamTwo.score) broadcast(lobbyId, 'Tie');
+      updateLobbyById(lobbyId, data);
 
-    // Update players competing;, and the game winner
-    lobby.games = data.games;
-
-    broadcast(lobbyId, `/${lobbyId}/game`);
+      return;
+    }
+    broadcast(lobbyId);
   });
 
   /* --------------- Main connection and event listener routing --------------- */
@@ -255,7 +256,7 @@ function startWebSocketServer(sessionParser, server) {
           wss.emit('endGameDraft', ws, userId, lobbyId);
           break;
         case 'setGameState':
-          wss.emit('setGameWinner', ws, userId, lobbyId, data);
+          wss.emit('setGameState', ws, userId, lobbyId, data);
           break;
         default:
           console.log('Unknown event:', event);

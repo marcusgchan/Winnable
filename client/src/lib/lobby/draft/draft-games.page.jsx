@@ -32,7 +32,7 @@ import { z } from "zod";
 import React, { useState, useEffect } from "react";
 import { SERVER_URL } from "/src/lib/common/constants.js";
 import { useWebSocket } from "@/lib/websocket/useWebSocket";
-import { useParams, useLoaderData, Link } from "react-router-dom";
+import { useParams, useLoaderData, Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const createGameSchema = z.object({
@@ -43,6 +43,7 @@ const createGameSchema = z.object({
 });
 
 export function DraftGamesPage() {
+  const navigate = useNavigate();
   const { user } = useLoaderData();
   const selectGameForm = useForm({
     resolver: zodResolver(createGameSchema),
@@ -69,7 +70,8 @@ export function DraftGamesPage() {
         lobbyState.pickingPlayerId || lobbyState.host;
       console.log("pickingPlayerId", lobbyState.pickingPlayerId);
       if (redirectUrl) {
-        console.log(redirectUrl);
+        navigate(redirectUrl, { replace: true });
+        return;
       }
       setLobby(lobbyState);
     },
