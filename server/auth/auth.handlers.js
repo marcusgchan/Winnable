@@ -40,8 +40,12 @@ async function callback(req, res) {
       headers: { Authorization: `Bearer ${response.data.access_token}` },
     });
 
+    console.log(user);
+
     // Check if user exists in database
     let userLogin = await userHandlers.getUserByDiscordId(user.data.id);
+
+    console.log(userLogin);
     if (!userLogin) {
       // Create user
       userLogin = await userHandlers.createUserByDiscordId(user.data.id, user.data.username);
@@ -99,6 +103,7 @@ async function revoke(access_token) {
 }
 
 async function authorize(req, res) {
+  console.log(req.session.user);
   if (!req.session.user) {
     return res.json({ user: null, error: 'Not logged in' });
   }
