@@ -11,7 +11,6 @@ async function searchGames(req, res) {
     const response = await axios.post(`${GAME_API_URL}/game-list`, data, {
       headers: { "Content-Type": "application/json" },
     });
-    console.log("Response from game api: ", response);
     res.json(response.data);
   } catch (err) {
     console.error("Error finding games: ", err);

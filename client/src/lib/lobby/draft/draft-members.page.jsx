@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/lib/ui/card";
-import { useNavigate, useLoaderData, useParams } from "react-router-dom";
+import { useNavigate, useLoaderData, useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { useWebSocket } from "@/lib/websocket/useWebSocket";
 import {
@@ -80,6 +80,8 @@ export function DraftMembersPage() {
   if (!user) {
     <p>Login to join a lobby</p>;
   }
+
+  if (lobby.isOpen === false) return <div>Team Draft has ended! <Link className='text-team2 underline decoration-team2' to={`/${lobbyId}/draft-games/`}>Go to game draft</Link></div>
 
   return (
     <div className="space-y-6">

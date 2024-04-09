@@ -87,12 +87,10 @@ function startWebSocketServer(sessionParser, server) {
 
   wss.on('addGame', (ws, userId, lobbyId, data) => {
     const lobby = lobbies.get(lobbyId);
-    // Check if teams were finalized
-    // if (!lobby.isOpen) {
-    //   console.log("Teams were not finalized")
-    // }
     // Check if pickingPlayerId is the same as the userId
-    // if (userId !== lobby.pickingPlayerId) return;
+    console.log(userId, lobby.pickingPlayerId);
+    if (userId.toString() !== lobby.pickingPlayerId.toString()) return;
+    if (lobby.games.length >= lobby.numGames) return;
     const totalGames = lobby.games.length + 1;
     // Team 1 always starts first so if totalGames is even, it's team 1's turn
     const team1Turn = totalGames % 2 === 0;
@@ -110,7 +108,10 @@ function startWebSocketServer(sessionParser, server) {
       console.log('picking player id from TEAM 2:', pickingPlayerId);
     }
     lobby.games.push(data);
-    lobby.pickingPlayerId = pickingPlayerId;
+    // Check if the game is the last game
+    if (totalGames === lobby.numGames) lobby.pickingPlayerId = null;
+    else lobby.pickingPlayerId = pickingPlayerId;
+    // console.log('PICKING PLAYER ID', lobby.pickingPlayerId);
     broadcast(lobbyId);
     // updateLobbyById(lobbyId, lobby);
   });

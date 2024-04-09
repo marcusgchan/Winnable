@@ -63,12 +63,12 @@ export function DraftGamesPage() {
         return;
       }
 
-      console.log("received", JSON.parse(e.data));
+      // console.log("received", JSON.parse(e.data));
 
       const { lobbyState, redirectUrl } = JSON.parse(e.data);
       lobbyState.pickingPlayerId =
         lobbyState.pickingPlayerId || lobbyState.host;
-      console.log("pickingPlayerId", lobbyState.pickingPlayerId);
+      // console.log("pickingPlayerId", lobbyState.pickingPlayerId);
       if (redirectUrl) {
         navigate(redirectUrl, { replace: true });
         return;
@@ -86,12 +86,12 @@ export function DraftGamesPage() {
   });
 
   function addGame(game) {
-    console.log("Adding Game", game);
+    // console.log("Adding Game", game);
     ws.send(JSON.stringify({ event: "addGame", data: game }));
   }
 
   function startGame() {
-    console.log("Game Draft Ended");
+    // console.log("Game Draft Ended");
     ws.send(JSON.stringify({ event: "endGameDraft" }));
   }
 
@@ -105,11 +105,13 @@ export function DraftGamesPage() {
     return (
       <div>
         Team Draft has not ended.{" "}
-        <Link className="" to={`/${lobbyId}/draft-members`}>
+        <Link className='text-team2 underline decoration-team2' to={`/${lobbyId}/draft-members`}>
           Go back to Team Draft
         </Link>
       </div>
     );
+
+  if (lobby.teamOne.score + lobby.teamTwo.score >= lobby.games.length) return <div>This game has ended already! <Link className='text-team2 underline decoration-team2' to='/'>Go to main page</Link></div>
 
   return (
     <div className="flex flex-col space-y-16 bg-card bg-gray-900 p-4">
@@ -150,18 +152,7 @@ export function DraftGamesPage() {
               />
               <Button
                 type="submit"
-                disabled={lobby.pickingPlayerId !== user.id}
-                onClick={() => {
-                  console.log("I AM SUBMITTING THE FORM OKAY??");
-                  console.log(
-                    selectGameForm.getValues([
-                      "id",
-                      "name",
-                      "imageUrl",
-                      "description",
-                    ]),
-                  );
-                }}
+                disabled={(lobby.pickingPlayerId !== user.id) || lobby.numGames <= lobby.games.length}
               >
                 Add Game
               </Button>
@@ -235,6 +226,7 @@ function SearchGameModal({ selectGameForm }) {
   const [games, setGames] = useState([]);
   const handleSubmit = searchGameForm.handleSubmit(async (values) => {
     try {
+      setIsLoadingGames(true);
       const res = await fetch(
         `${SERVER_URL}/api/game/search-games/${values.gameName}`,
         {
@@ -245,11 +237,10 @@ function SearchGameModal({ selectGameForm }) {
           },
         },
       );
-      setIsLoadingGames(true);
       const data = await res.json();
       setGames(data);
       setTimeout(() => setIsLoadingGames(false), 3000);
-      console.log("data", data);
+      // console.log("data", data);
     } catch (err) {
       toast("No games found");
     }
@@ -336,7 +327,7 @@ function SelectedGames({ games }) {
         return (
           <div
             key={game.id}
-            className="m-1 flex items-center justify-center rounded bg-team1 px-1 font-semibold"
+            className="m-1 flex items-center justify-center rounded bg-gray-900 px-2"
           >
             {game.name}
           </div>
@@ -354,7 +345,7 @@ function MembersList({ members, pickingPlayerId }) {
       {members?.map(({ id, username }) => (
         <li key={id} className="flex flex-row items-center gap-1">
           {pickingPlayerId === id ? (
-            <span className="m-0 flex items-center justify-center rounded bg-team2 px-1">
+            <span className="m-0 flex items-center justify-center rounded border-2 border-team2 px-1">
               {username}'s turn
             </span>
           ) : (
