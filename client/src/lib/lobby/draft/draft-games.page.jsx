@@ -57,7 +57,7 @@ export function DraftGamesPage() {
   const [lobby, setLobby] = useState(null);
   const { lobbyId } = useParams();
   const ws = useWebSocket({
-    socketUrl: `ws://localhost:8080?lobby=${lobbyId}`,
+    socketUrl: `ws://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
     onMessage(e) {
       if (!e.data) {
         return;
@@ -103,13 +103,24 @@ export function DraftGamesPage() {
     return (
       <div>
         Team Draft has not ended.{" "}
-        <Link className='text-team2 underline decoration-team2' to={`/${lobbyId}/draft-members`}>
+        <Link
+          className="text-team2 underline decoration-team2"
+          to={`/${lobbyId}/draft-members`}
+        >
           Go back to Team Draft
         </Link>
       </div>
     );
 
-  if (lobby.teamOne.score + lobby.teamTwo.score >= lobby.games.length) return <div>This game has ended already! <Link className='text-team2 underline decoration-team2' to='/'>Go to main page</Link></div>
+  if (lobby.teamOne.score + lobby.teamTwo.score >= lobby.games.length)
+    return (
+      <div>
+        This game has ended already!{" "}
+        <Link className="text-team2 underline decoration-team2" to="/">
+          Go to main page
+        </Link>
+      </div>
+    );
 
   return (
     <div className="flex flex-col space-y-16 bg-card bg-gray-900 p-4">
@@ -150,7 +161,10 @@ export function DraftGamesPage() {
               />
               <Button
                 type="submit"
-                disabled={(lobby.pickingPlayerId !== user.id) || lobby.numGames <= lobby.games.length}
+                disabled={
+                  lobby.pickingPlayerId !== user.id ||
+                  lobby.numGames <= lobby.games.length
+                }
               >
                 Add Game
               </Button>
@@ -202,7 +216,14 @@ export function DraftGamesPage() {
 
       {/* Start button */}
       <div className="text-center">
-        {lobby.numGames <= lobby.games.length && <p className="text-team2 mb-2">Games are set, {lobby.host === user.id ? " press start!" : " waiting for host to press start" }</p>}
+        {lobby.numGames <= lobby.games.length && (
+          <p className="mb-2 text-team2">
+            Games are set,{" "}
+            {lobby.host === user.id
+              ? " press start!"
+              : " waiting for host to press start"}
+          </p>
+        )}
         <Button
           disabled={user.id !== lobby.host || lobby.games.length === 0}
           onClick={() => startGame()}

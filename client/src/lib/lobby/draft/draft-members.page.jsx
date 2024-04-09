@@ -23,7 +23,7 @@ export function DraftMembersPage() {
   const { lobbyId } = useParams();
   const [lobby, setLobby] = useState(null);
   const ws = useWebSocket({
-    socketUrl: `ws://localhost:8080?lobby=${lobbyId}`,
+    socketUrl: `ws://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
     onMessage(e) {
       if (!e.data) {
         return;
@@ -70,16 +70,33 @@ export function DraftMembersPage() {
     ws.send(JSON.stringify({ event: "endTeamDraft" }));
     const navigateLink = `/${lobbyId}/draft-games/`;
     navigate(navigateLink, { replace: true });
-    console.log('NAVIGATEINGINSDAAAAAAA')
+    console.log("NAVIGATEINGINSDAAAAAAA");
   }
 
-  if (!lobby) return <div>Oops! Either the lobby doesn&apos;t exist, or they no longer want you there...</div>;
+  if (!lobby)
+    return (
+      <div>
+        Oops! Either the lobby doesn&apos;t exist, or they no longer want you
+        there...
+      </div>
+    );
 
   if (!user) {
     <p>Login to join a lobby</p>;
   }
 
-  if (lobby.isOpen === false) return <div>Team Draft has ended! <Link className='text-team2 underline decoration-team2' to={`/${lobbyId}/draft-games/`}>Go to game draft</Link></div>
+  if (lobby.isOpen === false)
+    return (
+      <div>
+        Team Draft has ended!{" "}
+        <Link
+          className="text-team2 underline decoration-team2"
+          to={`/${lobbyId}/draft-games/`}
+        >
+          Go to game draft
+        </Link>
+      </div>
+    );
 
   return (
     <div className="space-y-6">

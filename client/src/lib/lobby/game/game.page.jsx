@@ -91,7 +91,7 @@ export function GamePage({ ...props }) {
 
   /* ----------------------------------- ws ----------------------------------- */
   const ws = useWebSocket({
-    socketUrl: `ws://localhost:8080?lobby=${lobbyId}`,
+    socketUrl: `ws://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
     onMessage(e) {
       if (!e.data) {
         return;
@@ -118,13 +118,28 @@ export function GamePage({ ...props }) {
     return (
       <div className="flex min-w-60 flex-col justify-start gap-y-3">
         <div className="shadow-l flex flex-col items-center justify-center rounded-lg bg-card p-4">
-          <img src={'https://media.tenor.com/2QlPMoUorrsAAAAi/dance-breakdance.gif'} className="mb-2" alt='We dancing' />
-          { result === "Tie" ?
-            <h1 className="mb-5 text-2xl uppercase font-logo">It&apos;s a {result}!</h1>
-            :
-          <h1 className="mb-5 text-2xl uppercase font-logo">{result} Wins!</h1>}
-          <h1 className="text-xl font-slogan">Score: {lobbyObj.teamOne.score} - {lobbyObj.teamTwo.score}</h1>
-          <Link to="/" className='mt-5 text-team2 underline decoration-team2'>Return to Home</Link>
+          <img
+            src={
+              "https://media.tenor.com/2QlPMoUorrsAAAAi/dance-breakdance.gif"
+            }
+            className="mb-2"
+            alt="We dancing"
+          />
+          {result === "Tie" ? (
+            <h1 className="mb-5 font-logo text-2xl uppercase">
+              It&apos;s a {result}!
+            </h1>
+          ) : (
+            <h1 className="mb-5 font-logo text-2xl uppercase">
+              {result} Wins!
+            </h1>
+          )}
+          <h1 className="font-slogan text-xl">
+            Score: {lobbyObj.teamOne.score} - {lobbyObj.teamTwo.score}
+          </h1>
+          <Link to="/" className="mt-5 text-team2 underline decoration-team2">
+            Return to Home
+          </Link>
         </div>
       </div>
     );
@@ -349,10 +364,16 @@ export function GamePage({ ...props }) {
   }
 
   if (!lobbyObj) return <div>Loading...</div>;
-  if (!result && (lobbyObj.teamOne.score + lobbyObj.teamTwo.score >= lobbyObj.games.length)) {
-    if (lobbyObj.teamOne.score > lobbyObj.teamTwo.score) return winnerScreen("Team One");
-    if (lobbyObj.teamOne.score < lobbyObj.teamTwo.score) return winnerScreen("Team Two");
-    if (lobbyObj.teamOne.score === lobbyObj.teamTwo.score) return winnerScreen("Tie");
+  if (
+    !result &&
+    lobbyObj.teamOne.score + lobbyObj.teamTwo.score >= lobbyObj.games.length
+  ) {
+    if (lobbyObj.teamOne.score > lobbyObj.teamTwo.score)
+      return winnerScreen("Team One");
+    if (lobbyObj.teamOne.score < lobbyObj.teamTwo.score)
+      return winnerScreen("Team Two");
+    if (lobbyObj.teamOne.score === lobbyObj.teamTwo.score)
+      return winnerScreen("Tie");
   }
 
   return (

@@ -3,7 +3,9 @@ let ws;
 // const userId = "65e53a1b6258c473f5e22d25";
 export function initializeWebSocket(lobbyId) {
   //  ws = new WebSocket(`ws://localhost:8080/?lobby=${lobbyId}`);
-  ws = new WebSocket(`ws://localhost:8080?lobby=${lobbyId}`);
+  ws = new WebSocket(
+    `ws://${SERVER_URL.replace("https://", "")}?lobby=${lobbyId}`,
+  );
 
   // send a message back to server once the connection has been opened
   // used to bind a userID with this websocket client
@@ -34,7 +36,7 @@ export function initializeWebSocket(lobbyId) {
 // Call this function when client leaves the lobby
 export function closeWebSocket(lobbyId) {
   // Pass this to delete from memory
-  const message = { lobbyId }
+  const message = { lobbyId };
   if (ws) {
     ws.close(1000, JSON.stringify(message));
   }
