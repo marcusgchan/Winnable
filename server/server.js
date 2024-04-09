@@ -25,7 +25,7 @@ const sessionParser = session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: false, sameSite: 'none', maxAge: 86400000, unset: 'destroy' }, // not sure if should set to destroy
+  cookie: { httpOnly: false, secure: true, sameSite: 'none', maxAge: 86400000, unset: 'destroy' }, // not sure if should set to destroy
   store,
 });
 
