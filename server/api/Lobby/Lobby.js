@@ -21,19 +21,10 @@ async function retrieveLobbyById(lobbyId) {
 
 async function updateLobbyById(lobbyId, keyValueObj) {
   try {
-    const newUpdatedLobby = { ...keyValueObj };
-    // Check keyValueObj members
-    if (keyValueObj.teamOne && keyValueObj.teamOne.members) {
-      const teamOneMembers = keyValueObj.teamOne.members.map((member) => member.id);
-      newUpdatedLobby.teamOne.members = teamOneMembers;
-    }
-    if (keyValueObj.teamTwo && keyValueObj.teamTwo.members) {
-      const teamTwoMembers = keyValueObj.teamTwo.members.map((member) => member.id);
-      newUpdatedLobby.teamTwo.members = teamTwoMembers;
-    }
+    const updatedLobbyState = Object.fromEntries(keyValueObj.entries());
     const updatedLobby = await Lobby.findByIdAndUpdate(
       lobbyId,
-      { ...newUpdatedLobby, lastUpdated: Date.now() },
+      { ...updatedLobbyState, lastUpdated: Date.now() },
       { new: true }
     );
     return updatedLobby;
@@ -67,9 +58,8 @@ async function joinLobby(lobbyId, userId) {
     const lobby = await Lobby.findById(lobbyId);
     const isUserinLobby = lobby.teamOne.members.includes(userId) || lobby.teamTwo.members.includes(userId);
     const totalCurrentPlayers = lobby.teamOne.members.length + lobby.teamTwo.members.length;
-    if ((!lobby.isOpen || totalCurrentPlayers >= lobby.maxPlayers) && !isUserinLobby) throw new Error('Lobby is closed or full');
-    
-
+    if ((!lobby.isOpen || totalCurrentPlayers >= lobby.maxPlayers) && !isUserinLobby)
+      throw new Error('Lobby is closed or full');
   } catch (err) {
     console.error('Error joining lobby: ', err);
   }

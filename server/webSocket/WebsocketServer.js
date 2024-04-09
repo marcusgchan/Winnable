@@ -128,7 +128,7 @@ function startWebSocketServer(sessionParser, server) {
   });
 
   wss.on('endGameDraft', (ws, userId, lobbyId) => {
-    updateLobbyById(lobbyId, lobby);
+    updateLobbyById(lobbyId, lobbies.get(lobbyId));
     broadcast(lobbyId, `/${lobbyId}/game`);
   });
 
