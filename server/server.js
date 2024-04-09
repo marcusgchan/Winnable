@@ -20,6 +20,7 @@ const app = express();
 
 const PORT = process.env.PORT;
 
+app.use('trust proxy', 1);
 const sessionParser = session({
   name: 'session',
   secret: process.env.SESSION_SECRET,
