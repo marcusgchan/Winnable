@@ -97,17 +97,16 @@ export function GamePage({ ...props }) {
         return;
       }
 
-      console.log("received", JSON.parse(e.data));
+      // console.log("received", JSON.parse(e.data));
 
       const { lobbyState, redirectUrl } = JSON.parse(e.data);
+      setLobbyObj(lobbyState);
       if (redirectUrl) {
         setResult(redirectUrl);
         console.log(redirectUrl);
-        const redirectTimeOut = setTimeout(() => navigate("/"), 5000);
+        const redirectTimeOut = setTimeout(() => navigate("/"), 15000);
         return;
       }
-
-      setLobbyObj(lobbyState);
     },
     onClose() {
       console.log("closed");
@@ -115,12 +114,17 @@ export function GamePage({ ...props }) {
   });
 
   /* --------------------------------- Containers --------------------------------- */
-  function winnerScreen() {
+  function winnerScreen(result) {
     return (
       <div className="flex min-w-60 flex-col justify-start gap-y-3">
         <div className="shadow-l flex flex-col items-center justify-center rounded-lg bg-card p-4">
-          <h1 className="mb-5 text-2xl uppercase">{result}</h1>
-          <p>Return to main menu in 5 sec</p>
+          <img src={'https://media.tenor.com/2QlPMoUorrsAAAAi/dance-breakdance.gif'} className="mb-2" alt='We dancing' />
+          { result === "Tie" ?
+            <h1 className="mb-5 text-2xl uppercase font-logo">It&apos;s a {result}!</h1>
+            :
+          <h1 className="mb-5 text-2xl uppercase font-logo">{result} Wins!</h1>}
+          <h1 className="text-xl font-slogan">Score: {lobbyObj.teamOne.score} - {lobbyObj.teamTwo.score}</h1>
+          <Link to="/" className='mt-5 text-team2 underline decoration-team2'>Return to Home</Link>
         </div>
       </div>
     );
@@ -344,6 +348,13 @@ export function GamePage({ ...props }) {
     });
   }
 
+  if (!lobbyObj) return <div>Loading...</div>;
+  if (!result && (lobbyObj.teamOne.score + lobbyObj.teamTwo.score >= lobbyObj.games.length)) {
+    if (lobbyObj.teamOne.score > lobbyObj.teamTwo.score) return winnerScreen("Team One");
+    if (lobbyObj.teamOne.score < lobbyObj.teamTwo.score) return winnerScreen("Team Two");
+    if (lobbyObj.teamOne.score === lobbyObj.teamTwo.score) return winnerScreen("Tie");
+  }
+
   return (
     <div className="flex min-h-screen flex-row flex-col items-center justify-start gap-x-6 bg-gray-900 p-4 text-white">
       {lobbyObj && !result && (
@@ -354,7 +365,7 @@ export function GamePage({ ...props }) {
           {teamDisplay("teamTwo")}
         </div>
       )}
-      {result && winnerScreen()}
+      {result && winnerScreen(result)}
     </div>
   );
 }

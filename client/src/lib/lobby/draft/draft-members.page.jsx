@@ -15,15 +15,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/lib/ui/tooltip";
-import { Minus } from "lucide-react";
-import { ContinueDialog } from "@/lib/ui/continue-dialog";
+import { X } from "lucide-react";
 
 export function DraftMembersPage() {
   const navigate = useNavigate();
   const { user } = useLoaderData();
   const { lobbyId } = useParams();
   const [lobby, setLobby] = useState(null);
-  const [isContinueDialogOpen, setIsContinueDialogOpen] = useState(false)
   const ws = useWebSocket({
     socketUrl: `ws://localhost:8080?lobby=${lobbyId}`,
     onMessage(e) {
@@ -85,7 +83,6 @@ export function DraftMembersPage() {
 
   return (
     <div className="space-y-6">
-      <ContinueDialog redirectUrl={`${lobbyId}/draft-games`} isOpen={isContinueDialogOpen} />
       <h1 className="text-center text-2xl font-bold ">
         Lobby {lobby.lobbyName}
       </h1>
@@ -101,7 +98,7 @@ export function DraftMembersPage() {
                   <span>{username}</span>
                   {lobby.host === user.id && lobby.host !== id && (
                     <button onClick={() => handleKick(id)}>
-                      <Minus />
+                      <X className="text-destructive" />
                     </button>
                   )}
                 </div>
@@ -159,7 +156,7 @@ export function DraftMembersPage() {
                   <span>{username}</span>
                   {lobby.host === user.id && lobby.host !== id && (
                     <button onClick={() => handleKick(id)}>
-                      <Minus />
+                      <X className="text-destructive" />
                     </button>
                   )}
                 </div>

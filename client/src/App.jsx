@@ -35,6 +35,10 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import '@fontsource/fira-sans-extra-condensed/300.css';
+import '@fontsource/fira-sans-extra-condensed/400.css';
+import '@fontsource/fira-sans-extra-condensed/500.css';
+import '@fontsource/fira-sans-extra-condensed/700.css';
 
 // mui
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -126,7 +130,11 @@ function Header() {
   }
   return (
     <header className="flex justify-between">
-      <span>Winnable</span>
+      <div className="flex flex-col justify-center">
+        <span className="font-logo text-lg py-0 my-0">WINNABLE</span>
+        <span className="font-slogan py-0 my-0 text-right text-sm" style={{lineHeight: 0.5}}>it&apos;s winnable</span>
+      </div>
+      
       {!user && (
         <div style={{ display: "flex", gap: "1rem" }}>
           <Link to={testLoginUrl}>Login as Test User</Link>

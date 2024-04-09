@@ -66,8 +66,6 @@ export function DraftGamesPage() {
       // console.log("received", JSON.parse(e.data));
 
       const { lobbyState, redirectUrl } = JSON.parse(e.data);
-      lobbyState.pickingPlayerId =
-        lobbyState.pickingPlayerId || lobbyState.host;
       // console.log("pickingPlayerId", lobbyState.pickingPlayerId);
       if (redirectUrl) {
         navigate(redirectUrl, { replace: true });
@@ -204,6 +202,7 @@ export function DraftGamesPage() {
 
       {/* Start button */}
       <div className="text-center">
+        {lobby.numGames <= lobby.games.length && <p className="text-team2 mb-2">Games are set, {lobby.host === user.id ? " press start!" : " waiting for host to press start" }</p>}
         <Button
           disabled={user.id !== lobby.host || lobby.games.length === 0}
           onClick={() => startGame()}

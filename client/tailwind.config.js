@@ -74,6 +74,11 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      fontFamily: {
+        sans: ['"Fira Sans Extra Condensed"', "sans-serif"],
+        logo: ["Righteous", "sans-serif"],
+        slogan: ["Fira Sans Extra Condensed", "sans-serif"]
+      },
     },
   },
   plugins: [],
