@@ -22,18 +22,19 @@ async function callback(req, res) {
     return res.status(400).send('Something went wrong! No code found');
   }
   try {
-    API_ENDPOINT = 'https://discord.com/api';
-    const data = {
+    API_ENDPOINT = 'https://discord.com/api/v10';
+    const data = new URLSearchParams({
       grant_type: 'authorization_code',
-      code,
-      redirect_uri: `http://${process.env.SERVER_URL}/api/auth/login-callback`,
+      code: code,
+      redirect_uri: 'https://winnable-hfythhryta-uw.a.run.app/api/auth/login-callback',
       client_id: process.env.CLIENT_ID,
       client_secret: process.env.CLIENT_SECRET,
-    };
-
+    });
+    console.log('POSTING REQ TO DISCORD');
     const response = await axios.post(`${API_ENDPOINT}/oauth2/token`, data, {
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
     });
+    console.log(response);
     // Access tokens expire every 7 days, then it will ask for re-authorization
     const user = await axios.get(`${API_ENDPOINT}/users/@me`, {
       headers: { Authorization: `Bearer ${response.data.access_token}` },
