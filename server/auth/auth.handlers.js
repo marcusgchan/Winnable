@@ -26,7 +26,7 @@ async function callback(req, res) {
     const data = {
       grant_type: 'authorization_code',
       code,
-      redirect_uri: 'http://localhost:8080/api/auth/login-callback',
+      redirect_uri: `http://${process.env.SERVER_URL}/api/auth/login-callback`,
       client_id: process.env.CLIENT_ID,
       client_secret: process.env.CLIENT_SECRET,
     };
