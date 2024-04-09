@@ -20,13 +20,12 @@ const app = express();
 
 const PORT = process.env.PORT;
 
-app.use('trust proxy', 1);
 const sessionParser = session({
-  name: 'session',
+  name: 'winnable_session',
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: false, secure: true, sameSite: 'none', maxAge: 86400000, unset: 'destroy' }, // not sure if should set to destroy
+  cookie: { httpOnly: true, secure: true, sameSite: 'none', maxAge: 86400000 }, // not sure if should set to destroy
   store,
 });
 
