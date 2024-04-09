@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose
+  DialogClose,
 } from "@/lib/ui/dialog";
 import {
   Form,
@@ -32,7 +32,7 @@ import { z } from "zod";
 import React, { useState, useEffect } from "react";
 import { SERVER_URL } from "/src/lib/common/constants.js";
 import { useWebSocket } from "@/lib/websocket/useWebSocket";
-import { useParams, useLoaderData, Link } from "react-router-dom";
+import { useParams, useLoaderData, Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const createGameSchema = z.object({
@@ -43,6 +43,7 @@ const createGameSchema = z.object({
 });
 
 export function DraftGamesPage() {
+  const navigate = useNavigate();
   const { user } = useLoaderData();
   const selectGameForm = useForm({
     resolver: zodResolver(createGameSchema),
@@ -65,22 +66,24 @@ export function DraftGamesPage() {
       console.log("received", JSON.parse(e.data));
 
       const { lobbyState, redirectUrl } = JSON.parse(e.data);
-      lobbyState.pickingPlayerId = lobbyState.pickingPlayerId || lobbyState.host;
+      lobbyState.pickingPlayerId =
+        lobbyState.pickingPlayerId || lobbyState.host;
       console.log("pickingPlayerId", lobbyState.pickingPlayerId);
       if (redirectUrl) {
-        console.log(redirectUrl)
+        navigate(redirectUrl, { replace: true });
+        return;
       }
       setLobby(lobbyState);
     },
     onClose() {
       console.log("closed");
     },
-  })
+  });
 
   const handleSubmitGameForm = selectGameForm.handleSubmit(async (values) => {
     selectGameForm.reset();
     addGame(values);
-  })
+  });
 
   function addGame(game) {
     console.log("Adding Game", game);
@@ -98,7 +101,15 @@ export function DraftGamesPage() {
 
   if (!lobby) return <div>Loading...</div>;
 
-  if (lobby.isOpen === true) return <div>Team Draft has not ended. <Link className="" to={`/${lobbyId}/draft-members`}>Go back to Team Draft</Link></div>
+  if (lobby.isOpen === true)
+    return (
+      <div>
+        Team Draft has not ended.{" "}
+        <Link className="" to={`/${lobbyId}/draft-members`}>
+          Go back to Team Draft
+        </Link>
+      </div>
+    );
 
   return (
     <div className="flex flex-col space-y-16 bg-card bg-gray-900 p-4">
@@ -109,8 +120,14 @@ export function DraftGamesPage() {
             <form onSubmit={handleSubmitGameForm} className="space-y-2">
               {selectGameForm.watch("name") && (
                 <div className="flex flex-row items-center gap-2">
-                  <img src={`https://${selectGameForm.getValues("imageUrl")}`} alt={selectGameForm.getValues("name")} className="w-24 h-24 rounded-sm" />
-                  <div className="font-semibold">{selectGameForm.getValues("name")}</div>
+                  <img
+                    src={`https://${selectGameForm.getValues("imageUrl")}`}
+                    alt={selectGameForm.getValues("name")}
+                    className="h-24 w-24 rounded-sm"
+                  />
+                  <div className="font-semibold">
+                    {selectGameForm.getValues("name")}
+                  </div>
                 </div>
               )}
               <SearchGameModal selectGameForm={selectGameForm} />
@@ -121,26 +138,45 @@ export function DraftGamesPage() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Description/Rules" className="h-52 bg-gray-800" {...field} />
+                      <Textarea
+                        placeholder="Description/Rules"
+                        className="h-52 bg-gray-800"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={lobby.pickingPlayerId !== user.id} onClick={() => {
-                console.log('I AM SUBMITTING THE FORM OKAY??')
-                console.log(selectGameForm.getValues(['id', 'name', 'imageUrl', 'description']))
-              }}>Add Game</Button>
+              <Button
+                type="submit"
+                disabled={lobby.pickingPlayerId !== user.id}
+                onClick={() => {
+                  console.log("I AM SUBMITTING THE FORM OKAY??");
+                  console.log(
+                    selectGameForm.getValues([
+                      "id",
+                      "name",
+                      "imageUrl",
+                      "description",
+                    ]),
+                  );
+                }}
+              >
+                Add Game
+              </Button>
             </form>
           </Form>
         </div>
 
         {/* Selected games and members list */}
-        <div className="w-3/4 flex flex-1 flex-col p-2 md:flex-row">
+        <div className="flex w-3/4 flex-1 flex-col p-2 md:flex-row">
           <Card className="w-1/2">
             <CardHeader className="flex flex-row items-center justify-between p-4">
               <CardTitle className="text-lg">Selected Games</CardTitle>
-              <span className="text-sm">{lobby.games.length}/{lobby.numGames}</span>
+              <span className="text-sm">
+                {lobby.games.length}/{lobby.numGames}
+              </span>
             </CardHeader>
             <CardContent>
               <SelectedGames games={lobby?.games} />
@@ -148,13 +184,16 @@ export function DraftGamesPage() {
           </Card>
 
           {/* Members list */}
-          <div className="mx-2 w-1/2 flex flex-col gap-2">
+          <div className="mx-2 flex w-1/2 flex-col gap-2">
             <Card>
               <CardHeader className="p-4">
                 <CardTitle className="text-lg">Team 1</CardTitle>
               </CardHeader>
               <CardContent>
-                <MembersList members={lobby?.teamOne.members} pickingPlayerId={lobby.pickingPlayerId} />
+                <MembersList
+                  members={lobby?.teamOne.members}
+                  pickingPlayerId={lobby.pickingPlayerId}
+                />
               </CardContent>
             </Card>
             <Card>
@@ -162,7 +201,10 @@ export function DraftGamesPage() {
                 <CardTitle className="text-lg">Team 2</CardTitle>
               </CardHeader>
               <CardContent>
-                <MembersList members={lobby?.teamTwo.members} pickingPlayerId={lobby.pickingPlayerId} />
+                <MembersList
+                  members={lobby?.teamTwo.members}
+                  pickingPlayerId={lobby.pickingPlayerId}
+                />
               </CardContent>
             </Card>
           </div>
@@ -171,7 +213,12 @@ export function DraftGamesPage() {
 
       {/* Start button */}
       <div className="text-center">
-        <Button disabled={(user.id !== lobby.host) || (lobby.games.length === 0)} onClick={() => startGame()}>START</Button>
+        <Button
+          disabled={user.id !== lobby.host || lobby.games.length === 0}
+          onClick={() => startGame()}
+        >
+          START
+        </Button>
       </div>
     </div>
   );
@@ -188,22 +235,25 @@ function SearchGameModal({ selectGameForm }) {
   const [games, setGames] = useState([]);
   const handleSubmit = searchGameForm.handleSubmit(async (values) => {
     try {
-      const res = await fetch(`${SERVER_URL}/api/game/search-games/${values.gameName}`,{
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        }
-      });
+      const res = await fetch(
+        `${SERVER_URL}/api/game/search-games/${values.gameName}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
       setIsLoadingGames(true);
       const data = await res.json();
       setGames(data);
       setTimeout(() => setIsLoadingGames(false), 3000);
-      console.log("data", data)
-    } catch(err) {
-      toast("No games found")
+      console.log("data", data);
+    } catch (err) {
+      toast("No games found");
     }
-  })
+  });
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -236,25 +286,38 @@ function SearchGameModal({ selectGameForm }) {
         {games?.length > 0 && !isLoadingGames && (
           <ScrollArea className="h-72">
             {games.map((game) => (
-              <div key={game.id} className="flex flex-row w-11/12 justify-between items-center gap-2">
-                <div className="flex flex-row justify-between items-center gap-2">
-                  <img src={`https://${game.cover}`} alt={game.name} className="w-12 h-12" />
+              <div
+                key={game.id}
+                className="flex w-11/12 flex-row items-center justify-between gap-2"
+              >
+                <div className="flex flex-row items-center justify-between gap-2">
+                  <img
+                    src={`https://${game.cover}`}
+                    alt={game.name}
+                    className="h-12 w-12"
+                  />
                   <div className="text-sm">{game.name}</div>
                 </div>
                 <DialogClose>
                   <Button
-                    variant={selectGameForm.getValues("id") === game.id ? "outline" : ""}
+                    variant={
+                      selectGameForm.getValues("id") === game.id
+                        ? "outline"
+                        : ""
+                    }
                     onClick={() => {
-                    selectGameForm.setValue("id", game.id);
-                    selectGameForm.setValue("name", game.name);
-                    selectGameForm.setValue("imageUrl", game.cover);
-                    setIsLoadingGames(true);
-                    setTimeout(() => setIsLoadingGames(false), 100);
-                  }}>
-                    {selectGameForm.getValues("id") === game.id ? "Selected" : "Select"}
+                      selectGameForm.setValue("id", game.id);
+                      selectGameForm.setValue("name", game.name);
+                      selectGameForm.setValue("imageUrl", game.cover);
+                      setIsLoadingGames(true);
+                      setTimeout(() => setIsLoadingGames(false), 100);
+                    }}
+                  >
+                    {selectGameForm.getValues("id") === game.id
+                      ? "Selected"
+                      : "Select"}
                   </Button>
                 </DialogClose>
-                
               </div>
             ))}
             <ScrollBar />
@@ -262,25 +325,26 @@ function SearchGameModal({ selectGameForm }) {
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 /** @param {{ games: {id: string, name: string}[] }} */
 function SelectedGames({ games }) {
   return (
-  <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
-    {games?.map((game) => {
-      return (
-        <div
-          key={game.id}
-          className="m-1 px-1 flex items-center justify-center rounded bg-team1 font-semibold"
-        >
-          {game.name}
-        </div>
-      );
-    })}
-    {/* More game slots */}
-  </div>)
+    <div className="mb-4 flex flex-wrap rounded bg-gray-800 p-2">
+      {games?.map((game) => {
+        return (
+          <div
+            key={game.id}
+            className="m-1 flex items-center justify-center rounded bg-team1 px-1 font-semibold"
+          >
+            {game.name}
+          </div>
+        );
+      })}
+      {/* More game slots */}
+    </div>
+  );
 }
 
 /** @param {{ members: {id: string, username: string}[] }} */
@@ -289,7 +353,13 @@ function MembersList({ members, pickingPlayerId }) {
     <ul className="max-h-80 space-y-2 overflow-y-auto">
       {members?.map(({ id, username }) => (
         <li key={id} className="flex flex-row items-center gap-1">
-          {(pickingPlayerId === id) ? <span className="m-0 px-1 flex items-center justify-center rounded bg-team2">{username}'s turn</span> : <Member name={username} />}
+          {pickingPlayerId === id ? (
+            <span className="m-0 flex items-center justify-center rounded bg-team2 px-1">
+              {username}'s turn
+            </span>
+          ) : (
+            <Member name={username} />
+          )}
         </li>
       ))}
     </ul>
@@ -300,4 +370,3 @@ function MembersList({ members, pickingPlayerId }) {
 function Member({ name }) {
   return <div className="">{name}</div>;
 }
-
