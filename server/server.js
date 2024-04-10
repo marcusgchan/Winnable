@@ -45,6 +45,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(sessionParser);
 
 app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
   // Attach user to req.session from mongo session store
   // console.log("FETCHING MIDDLEWARE req.session.id", req.session.id);
   if (req.session.id) {
