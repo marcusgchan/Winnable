@@ -27,7 +27,7 @@ const sessionParser = session({
   saveUninitialized: false,
   cookie: {
     httpOnly: false,
-    secure: true,
+    secure: false,
     sameSite: "none",
     maxAge: 86400000,
   }, // not sure if should set to destroy
