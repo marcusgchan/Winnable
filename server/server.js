@@ -58,7 +58,6 @@ app.use((req, res, next) => {
     next();
   }
 });
-app.options("*", cors());
 
 const server = http.createServer(app);
 

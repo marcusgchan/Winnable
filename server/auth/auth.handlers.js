@@ -85,6 +85,12 @@ async function callback(req, res) {
     console.log("callback req.session.user", req.session);
 
     console.log("frontend url", process.env.FRONTEND_URL);
+    res.cookie("test", "eee", {
+      httpOnly: false,
+      sameSite: "none",
+      secure: true,
+      maxAge: 86400000,
+    });
     return res.redirect(process.env.FRONTEND_URL);
   } catch (error) {
     console.log("ERROR IN TOKEN EXCHANGE");
