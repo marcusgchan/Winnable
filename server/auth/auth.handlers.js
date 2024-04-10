@@ -85,7 +85,7 @@ async function callback(req, res) {
     console.log("callback req.session.user", req.session);
 
     console.log("frontend url", process.env.FRONTEND_URL);
-    res.cookie("test", "eee", {
+    res.cookie("winnable_session", req.session.id, {
       httpOnly: false,
       sameSite: "none",
       secure: true,
