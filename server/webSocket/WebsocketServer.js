@@ -44,7 +44,7 @@ function startWebSocketServer(sessionParser, server) {
 
       wss.handleUpgrade(request, socket, head, (ws, req) => {
         // Check if the user can join the lobby
-        const data = url.parse(req.url).query;
+        const data = url.parse(req.url, true).query;
         console.log("requested data ", data);
         const userId = request.session.user.id;
         const isUserAuthorized = joinLobbyWS(data.lobby, userId);
