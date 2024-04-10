@@ -30,12 +30,10 @@ async function callback(req, res) {
       client_id: process.env.CLIENT_ID,
       client_secret: process.env.CLIENT_SECRET,
     };
+    console.log("data", data);
 
     let response;
     try {
-      // response = await axios.post(`${API_ENDPOINT}/oauth2/token`, data, {
-      //   headers: { "content-type": "application/x-www-form-urlencoded" },
-      // });
       response = await fetch(`${API_ENDPOINT}/oauth2/token`, {
         method: "POST",
         headers: {
