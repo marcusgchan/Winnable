@@ -44,6 +44,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(sessionParser);
 
+app.set("trust proxy", 1);
 app.use((req, res, next) => {
   // Attach user to req.session from mongo session store
   // console.log("FETCHING MIDDLEWARE req.session.id", req.session.id);
