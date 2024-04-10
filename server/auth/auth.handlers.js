@@ -76,21 +76,13 @@ async function callback(req, res) {
       console.log(error);
     }
 
-    console.log("userLogin", userLogin._id.toString());
     req.session.user = {
       id: userLogin._id.toString(),
       username: user.data.username,
     };
 
-    console.log("callback req.session.user", req.session);
-
-    console.log("frontend url", process.env.FRONTEND_URL);
-    res.cookie("winnable_session", req.session.id, {
-      httpOnly: false,
-      sameSite: "none",
-      secure: true,
-      maxAge: 86400000,
-    });
+    console.log("callback req.session", req.session);
+    console.log("callback req.session.id", req.session.id);
     return res.redirect(process.env.FRONTEND_URL);
   } catch (error) {
     console.log("ERROR IN TOKEN EXCHANGE");
